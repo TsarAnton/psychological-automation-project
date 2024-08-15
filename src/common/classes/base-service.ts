@@ -24,7 +24,7 @@ export abstract class BaseService {
 	}
         
     try {
-        return await method(queryRunner, options);
+        return await method(queryRunner);
     } catch (err) {
         if (queryRunner.isTransactionActive) {
     	    await queryRunner.rollbackTransaction();
@@ -42,6 +42,7 @@ export abstract class BaseService {
         }
     } finally {
         if (!options.queryRunner && queryRunner.isTransactionActive) {
+            await queryRunner.commitTransaction();
             await queryRunner.release();
         }
     }
