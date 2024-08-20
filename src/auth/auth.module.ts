@@ -1,15 +1,36 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { config as dotenvConfig } from 'dotenv';
+
+import { PassportModule } from "@nestjs/passport";
+import { JwtModule } from "@nestjs/jwt";
+
 import { Role } from "./entities/role.entity";
 import { User } from "./entities/user.entity";
-import { RoleController } from "./controllers/role.controller";
+import { UserToRole } from "./entities/user-to-role.entity";
+
 import { UserService } from "./services/user.service";
 import { RoleService } from "./services/role.service";
-import { UserToRole } from "./entities/user-to-role.entity";
+import { AuthService } from "./services/auth.service";
+
 import { UserController } from "./controllers/user.controller";
+import { RoleController } from "./controllers/role.controller";
+import { AuthController } from "./controllers/auth.controller";
+
+import { LocalStrategy } from "./strategies/local.startegy";
+import { JwtStrategy } from "./strategies/jwt.strategy";
+
+dotenvConfig({ path: '.env' });
 
 @Module({
     imports: [
+        PassportModule,
+        JwtModule.register({
+            secret: process.env.ACCESS_TOKEN_SECRET,
+            signOptions: { 
+                expiresIn: process.env.ACCESS_TOKEN_EXPIRED,
+            },
+        }),
         TypeOrmModule.forFeature([
             User,
             Role,
@@ -19,14 +40,19 @@ import { UserController } from "./controllers/user.controller";
     controllers: [
         UserController,
         RoleController,
+        AuthController,
     ],
     providers: [
         UserService,
         RoleService,
+        AuthService,
+        LocalStrategy,
+        JwtStrategy,
     ],
     exports: [
         UserService,
         RoleService,
+        AuthService,
     ]
 })
 export class AuthModule {}
