@@ -14,7 +14,8 @@ const dbconfig: TypeOrmModuleOptions = {
 	synchronize: false,
   	entities: ["dist/**/*.entity{.ts,.js}"],
   	migrations: ["migrations/*{.ts,.js}"],
-  	migrationsTableName: "migration_table"
+  	migrationsTableName: "migration_table",
+	logging: true,
 };
 
 export { dbconfig };
