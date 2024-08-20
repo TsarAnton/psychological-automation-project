@@ -234,5 +234,21 @@ export class UserService extends BaseService {
             return await argon2.verify(existingUser.password, verifyUserDto.password);
         }, options);
     }
+
+    public async readByLogin(
+        login: string,
+        options: ITransactionOptions = {},
+    ): Promise<User> {
+        return this.execInTransaction<User>(async queryRunner => {
+            const existingUser = await queryRunner.manager.findOne(User, {
+                where: { login },
+                relations: ['roles'],
+            });
+            if(existingUser === null) {
+                throw new NotFoundException(`User with login '${login}' does not exist`);
+            }
+            return existingUser;
+        }, options);
+    }
 }
 
