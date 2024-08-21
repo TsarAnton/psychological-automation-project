@@ -9,7 +9,7 @@ export abstract class BaseService {
     protected dataSource: DataSource,
 ) {}
 
-  async execInTransaction<T>(
+  protected async execInTransaction<T>(
     method: ServiceMethod<T>,
     options: ITransactionOptions,
   ): Promise<T> {

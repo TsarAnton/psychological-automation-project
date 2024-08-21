@@ -13,7 +13,7 @@ export type ReadAllResult<T> = {
 };
 
 export function createReadAllResultObject<T>(
-    options: BaseReadAllOptions,
+    options: IBaseReadAllOptions,
     count: number,
     entities: T[],
 ): ReadAllResult<T> {
@@ -35,7 +35,7 @@ export function createReadAllResultObject<T>(
     }
 }
 
-export interface BaseReadAllOptions extends ITransactionOptions {
+export interface IBaseReadAllOptions extends ITransactionOptions {
     sorting?: ISortingOptions;
     pagination?: IPaginationOptions;
 }

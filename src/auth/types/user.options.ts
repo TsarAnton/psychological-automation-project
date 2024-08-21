@@ -1,6 +1,6 @@
-import { BaseReadAllOptions } from "src/common/types/read-all-result.types";
+import { IBaseReadAllOptions } from "src/common/types/read-all-result.types";
 
-export interface IReadAllUsersOptions extends BaseReadAllOptions {
+export interface IReadAllUsersOptions extends IBaseReadAllOptions {
     filter?: {
         ids?: number[];
         roles?: number[];
