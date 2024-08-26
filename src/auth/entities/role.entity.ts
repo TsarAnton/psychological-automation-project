@@ -1,6 +1,7 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 import { User } from "./user.entity";
+import { UserToRole } from "./user-to-role.entity";
 
 @Entity({ name: 'roles', engine: 'InnoDB' })
 export class Role {
@@ -16,4 +17,10 @@ export class Role {
         { onUpdate: 'RESTRICT', onDelete: 'RESTRICT' }
     )
     users: User[];
+
+    @OneToMany(
+        () => UserToRole,
+        userToRole => userToRole.role,
+    )
+    roleToUsers: UserToRole[];
 }

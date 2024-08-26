@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { DataSource, Not } from "typeorm";
+import { DataSource, In, Not } from "typeorm";
 
 import { User } from "../entities/user.entity";
 import { UserToRole } from "../entities/user-to-role.entity";
@@ -91,8 +91,15 @@ export class UserService extends BaseService {
                     });
                 }
                 if(options.filter.roles) {
-                    queryBuilder.andWhere('role.id IN (:...roles)', {
-                        roles: options.filter.roles,
+                    //add all user's roles to user with roles in options.filter.roles
+                    const usersWithRoles = await queryRunner.manager.find(UserToRole, {
+                        where: {
+                            role: In(options.filter.roles),
+                        }
+                    });
+                    console.log(usersWithRoles);
+                    queryBuilder.andWhere('user.id IN (:...usersWithRoles)', {
+                        usersWithRoles: usersWithRoles.map(el => el.user),
                     });
                 }
             }
@@ -151,7 +158,7 @@ export class UserService extends BaseService {
             if(updateUserDto.password) {
                 if(!(await this.verifyPassword({
                     login: existingUser.login,
-                    password: updateUserDto.currentPassword,
+                    password: updateUserDto.currentPassword ? updateUserDto.currentPassword : '',
                 }, { queryRunner }))) {
                     throw new BadRequestException('Current password is incorrect');
                 }
@@ -173,14 +180,14 @@ export class UserService extends BaseService {
                     throw new BadRequestException(`One or several roles of roles array do not exist`);
                 }
 
-                await queryRunner.manager.delete(UserToRole, { userId: id });
+                await queryRunner.manager.delete(UserToRole, { user: existingUser });
 
                 await queryRunner.manager.createQueryBuilder()
                     .insert()
                     .into(UserToRole)
                     .values(roleEntities.map(el => ({
-                        userId: id,
-                        roleId: el.id,
+                        user: existingUser,
+                        role: el,
                     })))
                     .execute();
             }
@@ -203,15 +210,12 @@ export class UserService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<void> {
         return this.execInTransaction<void>(async queryRunner => {
-            if(!(await queryRunner.manager.exists(User, {
-                where: {
-                    id: id,
-                }
-            }))) {
+            const existingUser = await this.readById(id, { queryRunner });
+            if(!existingUser) {
                 throw new NotFoundException(`User with id '${id}' does not exist`);
             }
 
-            await queryRunner.manager.delete(UserToRole, { userId: id });
+            await queryRunner.manager.delete(UserToRole, { user: existingUser });
 
             await queryRunner.manager.delete(User, id);
         }, options);
@@ -248,6 +252,22 @@ export class UserService extends BaseService {
                 throw new NotFoundException(`User with login '${login}' does not exist`);
             }
             return existingUser;
+        }, options);
+    }
+
+    public async readAbobus(
+        options: ITransactionOptions = {},
+    ): Promise<void> {
+        return this.execInTransaction<void>(async queryRunner => {
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+            queryBuilder
+                .select()
+                .from(User, 'user')
+                .where('user.id = :id', {
+                    id: 1,
+                })
+                .execute()
+                
         }, options);
     }
 }

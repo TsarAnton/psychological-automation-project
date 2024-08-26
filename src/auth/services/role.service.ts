@@ -119,13 +119,12 @@ export class RoleService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<void> {
         return this.execInTransaction<void>(async queryRunner => {
-            if(!(await queryRunner.manager.exists(Role, {
-                where: { id },
-            }))) {
+            const existingRole = await this.readById(id, { queryRunner });
+            if(!existingRole) {
                 throw new NotFoundException(`Role with id '${id}' does not exist`);
             }
 
-            await queryRunner.manager.delete(UserToRole, { roleId: id });
+            await queryRunner.manager.delete(UserToRole, { role: existingRole });
 
             await queryRunner.manager.delete(Role, id);
         }, options);

@@ -1,29 +1,25 @@
-import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
+import { Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn } from "typeorm";
 
 import { User } from "./user.entity";
 import { Role } from "./role.entity";
 
 @Entity({ name: 'users_to_roles', engine: 'InnoDB' })
 export class UserToRole {
-    @PrimaryColumn({ name: 'user_id' })
-    userId: number;
-
-    @PrimaryColumn({ name: 'role_id' })
-    roleId: number;
-
-    @ManyToOne(
-        () => User,
-        user => user.roles,
-        { onUpdate: 'RESTRICT', onDelete: 'RESTRICT' },
-    )
-    @JoinColumn([{ name: 'user_id', referencedColumnName: 'id' }])
-    users: User[];
-
+    @PrimaryColumn({ name: 'role_id', unique: false, type: 'int' })
     @ManyToOne(
         () => Role,
-        role => role.users,
-        { onUpdate: 'RESTRICT', onDelete: 'RESTRICT' },
+        role => role.roleToUsers,
+        { onDelete: 'RESTRICT', onUpdate: 'RESTRICT', nullable: false },
     )
-    @JoinColumn([{ name: 'role_id', referencedColumnName: 'id' }])
-    roles: Role[];
+    @JoinColumn({ name: 'role_id', referencedColumnName: 'id' })
+    role: Role;
+
+    @PrimaryColumn({ name: 'user_id', unique: false, type: 'int' })
+    @ManyToOne(
+        () => User,
+        user => user.userToRoles,
+        { onDelete: 'RESTRICT', onUpdate: 'RESTRICT', nullable: false },
+    )
+    @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+    user: User;
 }

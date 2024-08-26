@@ -1,6 +1,7 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 import { Role } from "./role.entity";
+import { UserToRole } from "./user-to-role.entity";
 
 @Entity({ name: 'users', engine: 'InnoDB' })
 export class User {
@@ -30,4 +31,10 @@ export class User {
         },
     })
     roles: Role[];
+
+    @OneToMany(
+		() => UserToRole,
+		userToRole => userToRole.user,
+	)
+	userToRoles: UserToRole[];
 }
