@@ -8,3 +8,7 @@ type RoleObject = {
     id: number;
     name: string;
 }
+
+export type AccessToken = {
+    accessToken: string;
+}

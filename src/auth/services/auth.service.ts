@@ -5,7 +5,7 @@ import { BaseService } from 'src/common/classes/base-service';
 import { DataSource } from 'typeorm';
 import { VerifyUserDto } from '../dto/user.dto';
 import { ITransactionOptions } from 'src/common/types/transaction.types';
-import { JwtPayload } from '../types/auth.options';
+import { AccessToken, JwtPayload } from '../types/auth.options';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -38,9 +38,9 @@ export class AuthService extends BaseService {
         }, options);
     }
 
-    async login(jwtPayload: JwtPayload) {
+    async login(jwtPayload: JwtPayload): Promise<AccessToken> {
         return {
-            access_token: this.JwtService.sign(jwtPayload),
+            accessToken: this.JwtService.sign(jwtPayload),
         };
     }
 }
