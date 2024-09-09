@@ -254,21 +254,5 @@ export class UserService extends BaseService {
             return existingUser;
         }, options);
     }
-
-    public async readAbobus(
-        options: ITransactionOptions = {},
-    ): Promise<void> {
-        return this.execInTransaction<void>(async queryRunner => {
-            const queryBuilder = queryRunner.manager.createQueryBuilder();
-            queryBuilder
-                .select()
-                .from(User, 'user')
-                .where('user.id = :id', {
-                    id: 1,
-                })
-                .execute()
-                
-        }, options);
-    }
 }
 
