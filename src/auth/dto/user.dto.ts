@@ -55,7 +55,9 @@ export class ReadAllUsersDto extends BaseReadAllDto {
 
     @IsOptional()
     @IsArray()
-    @IsNumber({}, { each: true })
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
     @Type(() => Number)
     roles?: number[];
 

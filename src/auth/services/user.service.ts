@@ -97,7 +97,7 @@ export class UserService extends BaseService {
                             role: In(options.filter.roles),
                         }
                     });
-                    console.log(usersWithRoles);
+                    
                     queryBuilder.andWhere('user.id IN (:...usersWithRoles)', {
                         usersWithRoles: usersWithRoles.map(el => el.user),
                     });
