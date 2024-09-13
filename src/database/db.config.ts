@@ -13,7 +13,7 @@ const dbconfig: TypeOrmModuleOptions = {
 	database: process.env.MYSQL_DB_NAME || 'database',
 	synchronize: false,
   	entities: ["dist/**/*.entity{.ts,.js}"],
-  	migrations: ["migrations/*{.ts,.js}"],
+  	migrations: ["dist/migrations/*{.ts,.js}"],
   	migrationsTableName: "migration_table",
 	logging: true,
 };
