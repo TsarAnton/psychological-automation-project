@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { DataSource } from "typeorm";
-import { CreateGroupDto, UpdateGroupDto } from "../dto/group.dto";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { DataSource, Like } from "typeorm";
+import { CreateGroupDto, ReadOneGroupDto, UpdateGroupDto } from "../dto/group.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllGroupsOptions } from "../types/group.options";
@@ -136,6 +136,48 @@ export class GroupService extends BaseService {
             }
 
             await queryRunner.manager.delete(Group, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneGroupDto: ReadOneGroupDto,
+        options: ITransactionOptions = {},
+    ): Promise<Group> {
+        return this.execInTransaction<Group>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneGroupDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
+                .select(['group.id', 'group.name'])
+                .from(Group, 'group')
+                .leftJoinAndSelect('group.faculty', 'faculty');
+
+            if(readOneGroupDto.id) {
+                queryBuilder.andWhere('group.id = :id', {
+                    id: readOneGroupDto.id,
+                });
+            }
+            if(readOneGroupDto.name) {
+                queryBuilder.andWhere('group.name LIKE :name', {
+                    name: readOneGroupDto.name,
+                });
+            }
+
+            const existingGroup = await queryBuilder.getOne();
+
+            if(existingGroup === null) {
+                throw new NotFoundException(`Such group does not exist`);
+            }
+            
+            return existingGroup;
         }, options);
     }
 }

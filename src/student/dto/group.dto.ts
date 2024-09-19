@@ -49,3 +49,15 @@ export class ReadAllGroupsDto extends BaseReadAllDto {
     @Type(() => Number)
     ids?: number[];
 }
+
+export class ReadOneGroupDto {
+    @IsOptional()
+    @MaxLength(100)
+    @IsString()
+    name?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+}

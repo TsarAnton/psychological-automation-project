@@ -135,3 +135,40 @@ export class ReadAllStudentsDto extends BaseReadAllDto {
     @Type(() => Number)
     ids?: number[];
 }
+
+export class ReadOneStudentDto {
+    @IsOptional()
+    @MaxLength(50)
+    @IsString()
+    recordBookNumber?: string;
+
+    @IsOptional()
+    @MaxLength(100)
+    @IsString()
+    name?: string;
+
+    @IsOptional()
+    @MaxLength(100)
+    @IsString()
+    surname?: string;
+
+    @IsOptional()
+    @MaxLength(100)
+    @IsString()
+    patronymic?: string;
+
+    @IsOptional()
+    @MaxLength(20)
+    @IsString()
+    phoneNumber?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    user?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+}

@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Group } from "../entities/group.entity";
 import { GroupService } from "../services/group.service";
-import { CreateGroupDto, ReadAllGroupsDto, UpdateGroupDto } from "../dto/group.dto";
+import { CreateGroupDto, ReadAllGroupsDto, ReadOneGroupDto, UpdateGroupDto } from "../dto/group.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class GroupController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneGroupDto: ReadOneGroupDto,
+    ): Promise<Group> {
+        return await this.groupService.readOneBy(readOneGroupDto);
     }
 
     @Get(':id')
