@@ -4,6 +4,9 @@ import { ArrayMinSize, IsArray, IsBoolean, IsDate, IsDateString, IsInt, IsNotEmp
 import { BaseReadAllDto } from "src/common/dto/base-read-all.dto";
 import { LanguageNameDescriptionDto } from "./common/language-data.dto";
 import { PeriodDto } from "./common/period.dto";
+import { CreateQuestionInMethodDto } from "./question.dto";
+import { CreateIndicatorInMethodDto } from "./indicator.dto";
+
 
 export class CreateMethodDto {
     @IsOptional()
@@ -113,4 +116,50 @@ export class DisableMethodsDto extends BaseAvailMethodDto {
     @IsDate()
     @Type(() => Date)
     date?: Date;
+}
+
+export class CreateFullMethodDto {
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    timer?: number;
+
+    @IsNotEmpty()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => LanguageNameDescriptionDto)
+    languages: LanguageNameDescriptionDto[];
+
+    @IsNotEmpty()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => CreateQuestionInMethodDto)
+    questions: CreateQuestionInMethodDto[];
+
+    @IsNotEmpty()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => CreateIndicatorInMethodDto)
+    indicators: CreateIndicatorInMethodDto[];
+}
+
+export class ReadFullMethodDto {
+    @IsNotEmpty()
+    @IsInt()
+    @Type(() => Number)
+    id: number;
+
+    @IsNotEmpty()
+    @IsArray()
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => Number)
+    languages: number[];
 }

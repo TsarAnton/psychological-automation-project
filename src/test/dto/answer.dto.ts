@@ -85,3 +85,18 @@ export class ReadAllAnswersDto extends BaseReadAllDto {
     @Type(() => Number)
     results?: number[];
 }
+
+export class CreateAnswerInMethodDto {
+    @IsNotEmpty()
+    @IsInt()
+    @Type(() => Number)
+    point: number;
+
+    @IsNotEmpty()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => LanguageNameDto)
+    languages: LanguageNameDto[];
+}

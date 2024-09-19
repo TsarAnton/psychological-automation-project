@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Method } from "../entities/method.entity";
-import { AvailMethodsDto, CreateMethodDto, DisableMethodsDto, UpdateMethodDto } from "../dto/method.dto";
+import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadFullMethodDto, UpdateMethodDto } from "../dto/method.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IAvailableMethodArrays, ICheckIndicatorOptions, IReadAllMethodsOptions, IReadAvailableMethodsOptions } from "../types/method.options";
@@ -509,4 +509,108 @@ export class MethodService extends BaseLanguagesService {
         }, options);
     }
 
+    public async createFull(
+        fullMethodDto: CreateFullMethodDto,
+        options: ITransactionOptions = {},
+    ): Promise<Method> {
+        return this.execInTransaction<Method>(async queryRunner => {
+            const { questions, indicators, ...methodProperties } = fullMethodDto;
+            const createdMethod = await this.create(methodProperties, { queryRunner });
+
+            for(let question of questions) {
+                const { answers, ...questionProperties } = question;
+                const createdQuestion = await this.questionService.create({
+                    method: createdMethod.id,
+                    ...questionProperties,
+                }, { queryRunner });
+                for(let answer of answers) {
+                    await this.answerService.create({
+                        question: createdQuestion.id,
+                        ...answer,
+                    }, { queryRunner });
+                }
+            }
+
+            const validatedFormulas = validateFormulas(indicators.map(el => ({
+                name: el.name,
+                formula: el.formula,
+            })), questions.map(el => el.index));
+
+            for(let indicator of indicators) {
+                const { criteria, formula, ...indicatorProperties } = indicator;
+
+                const createdIndicator = await this.indicatorService.create({
+                    formula: formula,
+                    method: createdMethod.id,
+                    ...indicatorProperties,
+                }, { queryRunner }, validatedFormulas[indicators.findIndex(el => el.name === indicator.name)].formula);
+
+                if(indicator.display && criteria === undefined) {
+                    throw new BadRequestException(`Indicator '${indicator.name}' is displayed, but doesn't have any criterion`);
+                }
+
+                if(criteria) {
+                    for(let criterion of criteria) {
+                        await this.criterionService.create({
+                            indicator: createdIndicator.id,
+                            ...criterion,
+                        }, { queryRunner });
+                    }
+                }
+            }
+
+            return this.readFullById({
+                id: createdMethod.id,
+                languages: methodProperties.languages.map(el => el.language),
+            }, { queryRunner });
+        }, options);
+    }
+
+    async readFullById(
+        readFullMethodDto: ReadFullMethodDto,
+        options: ITransactionOptions = {},
+    ): Promise<Method> {
+        return this.execInTransaction<Method>(async queryRunner => {
+
+            let existingMethod = await queryRunner.manager.createQueryBuilder()
+                .select(['method.id', 'method.timer'])                
+                .from(Method, 'method')
+                .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id IN (:...languageIds)', {
+                    languageIds: readFullMethodDto.languages,
+                })
+                .leftJoinAndSelect('methodLanguages.language', 'methodLanguage')
+                .leftJoinAndSelect('method.questions', 'questions')
+                .leftJoin('questions.languages', 'questionLanguages', 'questionLanguages.language.id IN (:...languageIds)')
+                .leftJoinAndSelect('questionLanguages.language', 'questionLanguage')
+                .leftJoinAndSelect('questions.answers', 'answers')
+                .leftJoin('answers.languages', 'answerLanguages', 'answerLanguages.language.id IN (:...languageIds)')
+                .leftJoinAndSelect('answerLanguages.language', 'answerLanguage')
+                .leftJoinAndSelect('method.indicators', 'indicators')
+                .leftJoin('indicators.languages', 'indicatorLanguages', 'indicatorLanguages.language.id IN (:...languageIds)')
+                .leftJoinAndSelect('indicatorLanguages.language', 'indicatorLanguage')
+                .leftJoinAndSelect('indicators.criteria', 'criteria')
+                .leftJoin('criteria.languages', 'criteriaLanguages', 'criteriaLanguages.language.id IN (:...languageIds)')
+                .leftJoinAndSelect('criteriaLanguages.language', 'criteriaLanguage')
+                .addSelect([
+                    'methodLanguages.name', 
+                    'methodLanguages.description',
+                    'questionLanguages.name',
+                    'answerLanguages.name',
+                    'indicatorLanguages.name',
+                    'indicatorLanguages.description',
+                    'criteriaLanguages.name',
+                    'criteriaLanguages.description',
+                ])
+                .where('method.id = :id', {
+                    id: readFullMethodDto.id,
+                })
+                .getOne();
+
+            if(existingMethod === null) {
+                throw new NotFoundException(`Method with id '${readFullMethodDto.id}' does not exist`);
+            }
+
+            return existingMethod;
+        }, options);
+    }
 }

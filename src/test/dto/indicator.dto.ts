@@ -3,6 +3,7 @@ import { ArrayMinSize, IsArray, IsInt, IsNotEmpty, IsObject, IsOptional, IsStrin
 
 import { BaseReadAllDto } from "src/common/dto/base-read-all.dto";
 import { LanguageNameDescriptionDto } from "./common/language-data.dto";
+import { CreateCriterionInMethodDto } from "./criterion.dto";
 
 export class CreateIndicatorDto {
     @IsNotEmpty()
@@ -107,4 +108,39 @@ export class ReadAllIndicatorsDto extends BaseReadAllDto {
     @IsString()
     @MaxLength(255)
     name?: string;
+}
+
+export class CreateIndicatorInMethodDto {
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(255)
+    formula: string;
+
+    @IsNotEmpty()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    display: number;
+
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(255)
+    name: string;
+
+    @IsOptional()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => LanguageNameDescriptionDto)
+    languages?: LanguageNameDescriptionDto[];
+
+    @IsOptional()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => CreateCriterionInMethodDto)
+    criteria?: CreateCriterionInMethodDto[];
 }
