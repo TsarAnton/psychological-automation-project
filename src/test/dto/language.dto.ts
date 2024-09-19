@@ -72,3 +72,15 @@ export class ReadAllLanguagesDto extends BaseReadAllDto {
     @Type(() => Number)
     answers?: number[];
 }
+
+export class ReadOneLanguageDto {
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(100)
+    name?: string;
+}

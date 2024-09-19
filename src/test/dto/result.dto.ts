@@ -115,6 +115,38 @@ export class ReadAllResultsDto extends BaseReadAllDto {
     languages: number[];
 }
 
+export class ReadOneResultDto {
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    student?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    method?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    display?: number;
+
+    @IsNotEmpty()
+    @IsArray()
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => Number)
+    languages: number[];
+}
+
 export class ReadFullResultsDto {
     @IsNotEmpty()
     @IsInt()

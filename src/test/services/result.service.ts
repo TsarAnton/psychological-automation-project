@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Result } from "../entities/result.entity";
-import { CreateResultDto, ReadFullResultsDto, UpdateResultDto } from "../dto/result.dto";
+import { CreateResultDto, ReadFullResultsDto, ReadOneResultDto, UpdateResultDto } from "../dto/result.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllResultsOptions } from "../types/result.options";
@@ -288,6 +288,85 @@ export class ResultService extends BaseService {
             await queryRunner.manager.delete(ResultToIndicator, { result: { id: id }});
             
             await queryRunner.manager.delete(Result, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneResultDto: ReadOneResultDto,
+        options: ITransactionOptions = {},
+    ): Promise<Result> {
+        return this.execInTransaction<Result>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneResultDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const languages = readOneResultDto.languages ? readOneResultDto.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['result.id', 'result.date', 'result.display'])
+                .from(Result, 'result')
+                .leftJoinAndSelect('result.method', 'method')
+                .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoinAndSelect('methodLanguages.language', 'methodLanguage')
+                .leftJoin('result.indicators', 'indicators')
+                .leftJoinAndSelect('indicators.indicator', 'indicator')
+                .leftJoin('indicator.languages', 'indicatorLanguages', 'indicatorLanguages.language.id IN (:...languages)')
+                .leftJoinAndSelect('indicatorLanguages.language', 'indicatorLanguage')
+                .leftJoinAndSelect('indicator.criteria', 'criteria', 'criteria.minValue <= indicators.score AND criteria.maxValue >= indicators.score')
+                .leftJoin('criteria.languages', 'criteriaLanguages', 'criteriaLanguages.language.id IN (:...languages)')
+                .leftJoinAndSelect('criteriaLanguages.language', 'criteriaLanguage')
+                .leftJoinAndSelect('result.student', 'student')
+                .leftJoinAndSelect('student.group', 'group')
+                .leftJoinAndSelect('group.faculty', 'faculty')
+                .addSelect([ 
+                    'indicators.score',
+                    'indicatorLanguages.name',
+                    'indicatorLanguages.description',
+                    'criteriaLanguages.name',
+                    'criteriaLanguages.description',
+                    'methodLanguages.name',
+                    'methodLanguages.description',
+                ]);
+
+            if(readOneResultDto.id) {
+                queryBuilder.andWhere('result.id = :id', {
+                    id: readOneResultDto.id,
+                });
+            }
+            if(readOneResultDto.display) {
+                queryBuilder.andWhere('result.display = :display', {
+                    display: readOneResultDto.display,
+                });
+            }
+            if(readOneResultDto.method) {
+                queryBuilder.andWhere('method.id = :method', {
+                    method: readOneResultDto.method,
+                });
+            }
+            if(readOneResultDto.student) {
+                queryBuilder.andWhere('student.id = :student', {
+                    student: readOneResultDto.student,
+                });
+            }
+
+            const existingResult = await queryBuilder.getOne();
+
+            if(existingResult === null) {
+                throw new NotFoundException(`Such result does not exist`);
+            }
+            
+            return existingResult;
         }, options);
     }
 

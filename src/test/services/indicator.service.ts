@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Indicator } from "../entities/indicator.entity";
-import { CreateIndicatorDto, UpdateIndicatorDto } from "../dto/indicator.dto";
+import { CreateIndicatorDto, ReadOneIndicatorDto, UpdateIndicatorDto } from "../dto/indicator.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllIndicatorsOptions } from "../types/indicator.options";
@@ -317,6 +317,79 @@ export class IndicatorService extends BaseLanguagesService {
             }
 
             await queryRunner.manager.delete(Indicator, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneIndicatorDto: ReadOneIndicatorDto,
+        options: ITransactionOptions = {},
+    ): Promise<Indicator> {
+        return this.execInTransaction<Indicator>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneIndicatorDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const languages = readOneIndicatorDto.languages ? readOneIndicatorDto.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['indicator.id', 'indicator.realFormula', 'indicator.validatedFormula', 'indicator.display', 'indicator.name'])
+                .from(Indicator, 'indicator')
+                .leftJoin('indicator.languages', 'indicatorLanguages', 'indicatorLanguages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoinAndSelect('indicatorLanguages.language', 'indicatorLanguage')
+                .leftJoinAndSelect('indicator.method', 'method')
+                .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id IN (:...languages)')
+                .leftJoinAndSelect('methodLanguages.language', 'methodLanguage')
+                .addSelect([
+                    'indicatorLanguages.name',
+                    'indicatorLanguages.description',
+                    'methodLanguages.name',
+                    'methodLanguages.description',
+                ]);
+
+            if(readOneIndicatorDto.display) {
+                queryBuilder.andWhere('indicator.display = :display', {
+                    display: readOneIndicatorDto.display,
+                });
+            }
+            if(readOneIndicatorDto.formula) {
+                queryBuilder.andWhere('indicator.realFormula LIKE :formula', {
+                    formula: '%' + readOneIndicatorDto.formula + '%',
+                });
+            }
+            if(readOneIndicatorDto.method) {
+                queryBuilder.andWhere('method.id = :method', {
+                    method: readOneIndicatorDto.method,
+                });
+            }
+            if(readOneIndicatorDto.name) {
+                queryBuilder.andWhere('indicator.name LIKE :name', {
+                    display: '%' + readOneIndicatorDto.name + '%',
+                });
+            }
+            if(readOneIndicatorDto.id) {
+                queryBuilder.andWhere('indicator.id = :id', {
+                    id: readOneIndicatorDto.id,
+                });
+            }
+
+            const existingIndicator = await queryBuilder.getOne();
+
+            if(existingIndicator === null) {
+                throw new NotFoundException(`Such indicator does not exist`);
+            }
+            
+            return existingIndicator;
         }, options);
     }
 }

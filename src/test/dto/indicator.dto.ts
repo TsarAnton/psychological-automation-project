@@ -110,6 +110,43 @@ export class ReadAllIndicatorsDto extends BaseReadAllDto {
     name?: string;
 }
 
+export class ReadOneIndicatorDto {
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(255)
+    formula?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(255)
+    name?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    display?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    method?: number;
+
+    @IsOptional()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => LanguageNameDescriptionDto)
+    languages?: LanguageNameDescriptionDto[];
+}
+
 export class CreateIndicatorInMethodDto {
     @IsNotEmpty()
     @IsString()

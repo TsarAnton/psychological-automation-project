@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Indicator } from "../entities/indicator.entity";
 import { IndicatorService } from "../services/indicator.service";
-import { CreateIndicatorDto, ReadAllIndicatorsDto, UpdateIndicatorDto } from "../dto/indicator.dto";
+import { CreateIndicatorDto, ReadAllIndicatorsDto, ReadOneIndicatorDto, UpdateIndicatorDto } from "../dto/indicator.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class IndicatorController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneIndicatorDto: ReadOneIndicatorDto,
+    ): Promise<Indicator> {
+        return await this.indicatorService.readOneBy(readOneIndicatorDto);
     }
 
     @Get(':id')

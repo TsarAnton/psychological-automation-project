@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Language } from "../entities/language.entity";
 import { LanguageService } from "../services/language.service";
-import { CreateLanguageDto, ReadAllLanguagesDto, UpdateLanguageDto } from "../dto/language.dto";
+import { CreateLanguageDto, ReadAllLanguagesDto, ReadOneLanguageDto, UpdateLanguageDto } from "../dto/language.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class LanguageController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneLanguageDto: ReadOneLanguageDto,
+    ): Promise<Language> {
+        return await this.languageService.readOneBy(readOneLanguageDto);
     }
 
     @Get(':id')

@@ -111,6 +111,43 @@ export class ReadAllCriteriaDto extends BaseReadAllDto {
     maxValue?: number;
 }
 
+export class ReadOneCriterionDto {
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(2)
+    @Type(() => Number)
+    alarming?: number;
+
+    @IsOptional()
+    @IsNumber()
+    @Type(() => Number)
+    minValue?: number;
+
+    @IsOptional()
+    @IsNumber()
+    @Type(() => Number)
+    maxValue?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    indicator?: number;
+
+    @IsOptional()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => LanguageNameDescriptionDto)
+    languages?: LanguageNameDescriptionDto[];
+}
+
 export class CreateCriterionInMethodDto {
     @IsNotEmpty()
     @IsInt()

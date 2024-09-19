@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { DataSource, Not } from "typeorm";
 
 import { Language } from "../entities/language.entity";
-import { CreateLanguageDto, UpdateLanguageDto } from "../dto/language.dto";
+import { CreateLanguageDto, ReadOneLanguageDto, UpdateLanguageDto } from "../dto/language.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllLanguagesOptions } from "../types/language.options";
@@ -160,6 +160,47 @@ export class LanguageService extends BaseService {
             await queryRunner.manager.delete(QuestionToLanguage, { language: existingLanguage });
 
             await queryRunner.manager.delete(Language, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneLanguageDto: ReadOneLanguageDto,
+        options: ITransactionOptions = {},
+    ): Promise<Language> {
+        return this.execInTransaction<Language>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneLanguageDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
+                .select(['language.id', 'language.name'])
+                .from(Language, 'language');
+
+            if(readOneLanguageDto.id) {
+                queryBuilder.andWhere('language.id = :id', {
+                    id: readOneLanguageDto.id,
+                });
+            }
+            if(readOneLanguageDto.name) {
+                queryBuilder.andWhere('language.name = :name', {
+                    name: readOneLanguageDto.name,
+                });
+            }
+
+            const existingLanguage = await queryBuilder.getOne();
+
+            if(existingLanguage === null) {
+                throw new NotFoundException(`Such language does not exist`);
+            }
+            
+            return existingLanguage;
         }, options);
     }
 }
