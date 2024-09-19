@@ -1,6 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, OneToMany } from 'typeorm';
 import { Group } from './group.entity';
 import { User } from 'src/auth/entities/user.entity';
+import { Result } from 'src/test/entities/result.entity';
+import { AvailableMethod } from 'src/test/entities/available-method.entity';
 
 @Entity({ name: 'students', engine: 'InnoDB' })
 export class Student {
@@ -29,6 +31,18 @@ export class Student {
 	)
 	@JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
 	user: User;
+
+	@OneToMany(
+		() => Result,
+		result => result.student,
+	)
+	results: Result[];
+
+	@OneToMany(
+		() => AvailableMethod,
+		availableMethod => availableMethod.student,
+	)
+	availableMethods: AvailableMethod[];
 
     @ManyToOne(
 		() => Group,

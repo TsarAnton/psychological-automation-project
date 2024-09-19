@@ -30,7 +30,6 @@ export class  $npmConfigName1726211502166 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE \`faculties\``);
         await queryRunner.query(`DROP TABLE \`groups\``);
         await queryRunner.query(`DROP INDEX \`REL_fb3eff90b11bddf7285f9b4e28\` ON \`students\``);
-        await queryRunner.query(`DROP INDEX \`IDX_2c519609f7743049906086b89d\` ON \`students\``);
         await queryRunner.query(`DROP INDEX \`IDX_a82800bad7caac97718095ab00\` ON \`students\``);
         await queryRunner.query(`DROP TABLE \`students\``);
         await queryRunner.query(`DROP INDEX \`IDX_2d443082eccd5198f95f2a36e2\` ON \`users\``);
