@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { DataSource } from "typeorm";
 
 import { Group } from "../entities/group.entity";
@@ -6,7 +6,16 @@ import { GroupService } from "../services/group.service";
 import { CreateGroupDto, ReadAllGroupsDto, ReadOneGroupDto, UpdateGroupDto } from "../dto/group.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { HasRoles } from "src/auth/decorators/has-role.decorator";
+import { RolesGuard } from "src/auth/guards/roles.guard";
+import { AuthGuard } from "@nestjs/passport";
 
+@ApiTags('Group')
+@ApiBearerAuth()
+@HasRoles("admin", "specialist")
+@UseGuards(RolesGuard)
+@UseGuards(AuthGuard("jwt"))
 @Controller('groups')
 export class GroupController extends BaseController {
     constructor(
@@ -16,6 +25,10 @@ export class GroupController extends BaseController {
         super(dataSource);
     }
 
+    @ApiOperation({ summary: "Return all groups with provided pagination, sorting, filter" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Groups have succesfully returned", type: ReadAllResult })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Get()
     @HttpCode(HttpStatus.OK)
     public async getAllAction(
@@ -29,6 +42,12 @@ export class GroupController extends BaseController {
         });
     }
 
+    @ApiOperation({ summary: "Returns a group with provided filter" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully returned", type: Group })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Such group does not exist" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Get('/one')
     @HttpCode(HttpStatus.OK)
     public async getOneByAction(
@@ -37,6 +56,11 @@ export class GroupController extends BaseController {
         return await this.groupService.readOneBy(readOneGroupDto);
     }
 
+    @ApiOperation({ summary: "Returns a group with provided id" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully returned", type: Group })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Group with such id does not exist" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Get(':id')
     @HttpCode(HttpStatus.OK)
     public async getOneAction(
@@ -45,6 +69,11 @@ export class GroupController extends BaseController {
         return await this.groupService.readById(id);
     }
 
+    @ApiOperation({ summary: "Create a new group" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully created", type: Group })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Post()
     @HttpCode(HttpStatus.OK)
     public async createAction(
@@ -53,6 +82,12 @@ export class GroupController extends BaseController {
         return this.groupService.create(createGroupDto);
     }
 
+    @ApiOperation({ summary: "Update a group with provided id" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully updated", type: Group })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Group with such id does not exist" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Put(':id')
     @HttpCode(HttpStatus.OK)
     public async updateAction(
@@ -62,6 +97,11 @@ export class GroupController extends BaseController {
         return this.groupService.update(id, updateGroupDto);
     }
 
+    @ApiOperation({ summary: "Delete a group with provided id" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully deleted" })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Group with such id does not exist" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
     public async deleteAction(
