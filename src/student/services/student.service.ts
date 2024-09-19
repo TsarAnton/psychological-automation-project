@@ -187,27 +187,25 @@ export class StudentService extends BaseService {
             }
 
             const { group, user, ...properties } = updateStudentDto;
-            const updateStudentEntity = new Student();
-            
-            for(let property in properties) {
-                updateStudentEntity[property] = properties[property];
-            }
+
             if(group) {
                 const existingGroup = await this.groupService.readById(group, { queryRunner });
                 if(existingGroup === null) {
                     throw new NotFoundException(`Group with id '${group}' does not exist`);
                 }
-                updateStudentEntity.group = existingGroup;
             }
             if(user) {
                 const existingUser = await this.userService.readById(user, { queryRunner });
                 if(existingUser === null) {
                     throw new NotFoundException(`User with id '${user}' does not exist`);
                 }
-                updateStudentEntity.user = existingUser;
             }
             
-            await queryRunner.manager.update(Student, id, updateStudentEntity);
+            await queryRunner.manager.update(Student, id, {
+                ...properties,
+                user: user ? { id: user } : undefined,
+                group: group ? { id: group } : undefined,
+            });
             return this.readById(id, { queryRunner });
         }, options);
     }

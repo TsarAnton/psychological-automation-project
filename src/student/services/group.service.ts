@@ -114,13 +114,12 @@ export class GroupService extends BaseService {
                 if(existingFaculty === null) {
                     throw new NotFoundException(`Faculty with id '${faculty}' does not exist`);
                 }
-                await queryRunner.manager.update(Group, id, {
-                    faculty: existingFaculty,
-                    ...properties,
-                });
-            } else {
-                await queryRunner.manager.update(Group, id, properties);
             }
+
+            await queryRunner.manager.update(Group, id, {
+                faculty: faculty ? { id: faculty } : undefined,
+                ...properties,
+            });
 
             return this.readById(id, { queryRunner });
         }, options);
