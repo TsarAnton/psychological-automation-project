@@ -1,13 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { DataSource, Not } from "typeorm";
-import { CreateStudentDto, UpdateStudentDto } from "../dto/student.dto";
+import { DataSource, Like, Not } from "typeorm";
+import { CreateStudentDto, ReadOneStudentDto, UpdateStudentDto } from "../dto/student.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllStudentsOptions } from "../types/student.types";
 import { BaseService } from "src/common/classes/base-service";
 import { Student } from "../entities/student.entity";
-import { GroupService } from "./group.service";
 import { UserService } from "src/auth/services/user.service";
+import { GroupService } from "./group.service";
+import { User } from "src/auth/entities/user.entity";
 
 @Injectable()
 export class StudentService extends BaseService {
@@ -41,10 +42,10 @@ export class StudentService extends BaseService {
             }
 
             const { group, user, ...properties } = createStudentDto;
-            const existingGroup = await this.groupService.readById(group, { queryRunner });
+            const existingStudent = await this.groupService.readById(group, { queryRunner });
 
-            if(existingGroup === null) {
-                throw new NotFoundException(`Group with id '${group}' does not exist`);
+            if(existingStudent === null) {
+                throw new NotFoundException(`Student with id '${group}' does not exist`);
             }
 
             const existingUser = await this.userService.readById(user, { queryRunner });
@@ -53,7 +54,7 @@ export class StudentService extends BaseService {
             }
 
             return queryRunner.manager.save(Student, { 
-                group: existingGroup,
+                group: existingStudent,
                 user: existingUser,
                 ...properties,
             });
@@ -189,9 +190,9 @@ export class StudentService extends BaseService {
             const { group, user, ...properties } = updateStudentDto;
 
             if(group) {
-                const existingGroup = await this.groupService.readById(group, { queryRunner });
-                if(existingGroup === null) {
-                    throw new NotFoundException(`Group with id '${group}' does not exist`);
+                const existingStudent = await this.groupService.readById(group, { queryRunner });
+                if(existingStudent === null) {
+                    throw new NotFoundException(`Student with id '${group}' does not exist`);
                 }
             }
             if(user) {
@@ -221,6 +222,74 @@ export class StudentService extends BaseService {
             }
 
             await queryRunner.manager.delete(Student, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneStudentDto: ReadOneStudentDto,
+        options: ITransactionOptions = {},
+    ): Promise<Student> {
+        return this.execInTransaction<Student>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneStudentDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
+                .select(['student.id', 'student.name', 'student.patronymic', 'student.surname', 'student.phoneNumber', 'student.recordBookNumber'])
+                .from(Student, 'student')
+                .leftJoinAndSelect('student.group', 'group')
+                .leftJoinAndSelect('student.user', 'user');
+
+            if(readOneStudentDto.id) {
+                queryBuilder.andWhere('student.id = :id', {
+                    id: readOneStudentDto.id,
+                });
+            }
+            if(readOneStudentDto.name) {
+                queryBuilder.andWhere('student.name LIKE :name', {
+                    name: '%' + readOneStudentDto.name + '%',
+                });
+            }
+            if(readOneStudentDto.surname) {
+                queryBuilder.andWhere('student.surname LIKE :surname', {
+                    surname: '%' + readOneStudentDto.surname + '%',
+                });
+            }
+            if(readOneStudentDto.patronymic) {
+                queryBuilder.andWhere('student.patronymic LIKE :patronymic', {
+                    patronymic: '%' + readOneStudentDto.patronymic + '%',
+                });
+            }
+            if(readOneStudentDto.recordBookNumber) {
+                queryBuilder.andWhere('student.recordBookNumber = :recordBookNumber', {
+                    recordBookNumber: readOneStudentDto.recordBookNumber,
+                });
+            }
+            if(readOneStudentDto.phoneNumber) {
+                queryBuilder.andWhere('student.phoneNumber = :phoneNumber', {
+                    phoneNumber: readOneStudentDto.phoneNumber,
+                });
+            }
+            if(readOneStudentDto.user) {
+                queryBuilder.andWhere('user.id = :user', {
+                    user: readOneStudentDto.user,
+                });
+            }
+            
+            const existingStudent = await queryBuilder.getOne();
+
+            if(!existingStudent) {
+                throw new NotFoundException(`Such student does not exist`);
+            }
+
+            return existingStudent;
         }, options);
     }
 }

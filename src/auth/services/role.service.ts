@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { DataSource, Not } from "typeorm";
+import { DataSource, Like, Not } from "typeorm";
 
 import { Role } from "../entities/role.entity";
 import { UserToRole } from "../entities/user-to-role.entity";
-import { CreateRoleDto, UpdateRoleDto } from "../dto/role.dto";
+import { CreateRoleDto, ReadOneRoleDto, UpdateRoleDto } from "../dto/role.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllRolesOptions } from "../types/role.options";
@@ -127,6 +127,47 @@ export class RoleService extends BaseService {
             await queryRunner.manager.delete(UserToRole, { role: existingRole });
 
             await queryRunner.manager.delete(Role, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneRoleDto: ReadOneRoleDto,
+        options: ITransactionOptions = {},
+    ): Promise<Role> {
+        return this.execInTransaction<Role>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneRoleDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
+                .select(['role.id', 'role.name'])
+                .from(Role, 'role');
+
+            if(readOneRoleDto.id) {
+                queryBuilder.andWhere('role.id = :id', {
+                    id: readOneRoleDto.id,
+                });
+            }
+            if(readOneRoleDto.name) {
+                queryBuilder.andWhere('role.name LIKE :name', {
+                    name: readOneRoleDto.name,
+                });
+            }
+
+            const existingRole = await queryBuilder.getOne();
+
+            if(existingRole === null) {
+                throw new NotFoundException(`Such role does not exist`);
+            }
+            
+            return existingRole;
         }, options);
     }
 }

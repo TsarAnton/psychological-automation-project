@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Student } from "../entities/student.entity";
 import { StudentService } from "../services/student.service";
-import { CreateStudentDto, ReadAllStudentsDto, UpdateStudentDto } from "../dto/student.dto";
+import { CreateStudentDto, ReadAllStudentsDto, ReadOneStudentDto, UpdateStudentDto } from "../dto/student.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class StudentController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneStudentDto: ReadOneStudentDto,
+    ): Promise<Student> {
+        return await this.studentService.readOneBy(readOneStudentDto);
     }
 
     @Get(':id')

@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Faculty } from "../entities/faculty.entity";
 import { FacultyService } from "../services/faculty.service";
-import { CreateFacultyDto, ReadAllFacultiesDto, UpdateFacultyDto } from "../dto/faculty.dto";
+import { CreateFacultyDto, ReadAllFacultiesDto, ReadOneFacultyDto, UpdateFacultyDto } from "../dto/faculty.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class FacultyController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneFacultyDto: ReadOneFacultyDto,
+    ): Promise<Faculty> {
+        return await this.facultyService.readOneBy(readOneFacultyDto);
     }
 
     @Get(':id')

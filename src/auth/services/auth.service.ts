@@ -26,7 +26,7 @@ export class AuthService extends BaseService {
                 throw new BadRequestException(`Incorrect login or password`);
             }
 
-            const existingUser = await this.userService.readByLogin(verifyUserDto.login, { queryRunner });
+            const existingUser = await this.userService.readOneBy({ login: verifyUserDto.login }, { queryRunner });
             return {
                 id: existingUser.id,
                 login: existingUser.login,

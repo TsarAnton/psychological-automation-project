@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { DataSource } from "typeorm";
-import { CreateFacultyDto, UpdateFacultyDto } from "../dto/faculty.dto";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { DataSource, Like } from "typeorm";
+import { CreateFacultyDto, ReadOneFacultyDto, UpdateFacultyDto } from "../dto/faculty.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllFacultiesOptions } from "../types/faculty.options";
@@ -106,6 +106,47 @@ export class FacultyService extends BaseService {
             }
 
             await queryRunner.manager.delete(Faculty, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneFacultyDto: ReadOneFacultyDto,
+        options: ITransactionOptions = {},
+    ): Promise<Faculty> {
+        return this.execInTransaction<Faculty>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneFacultyDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
+                .select(['faculty.id', 'faculty.name'])
+                .from(Faculty, 'faculty');
+
+            if(readOneFacultyDto.id) {
+                queryBuilder.andWhere('faculty.id = :id', {
+                    id: readOneFacultyDto.id,
+                });
+            }
+            if(readOneFacultyDto.name) {
+                queryBuilder.andWhere('faculty.name LIKE :name', {
+                    name: readOneFacultyDto.name,
+                });
+            }
+
+            const existingFaculty = await queryBuilder.getOne();
+
+            if(existingFaculty === null) {
+                throw new NotFoundException(`Such faculty does not exist`);
+            }
+            
+            return existingFaculty;
         }, options);
     }
 }

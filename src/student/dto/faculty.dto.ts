@@ -31,3 +31,15 @@ export class ReadAllFacultiesDto extends BaseReadAllDto {
     @Type(() => Number)
     ids?: number[];
 }
+
+export class ReadOneFacultyDto {
+    @IsOptional()
+    @MaxLength(100)
+    @IsString()
+    name?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+}

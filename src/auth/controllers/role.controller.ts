@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Role } from "../entities/role.entity";
 import { RoleService } from "../services/role.service";
-import { CreateRoleDto, ReadAllRolesDto, UpdateRoleDto } from "../dto/role.dto";
+import { CreateRoleDto, ReadAllRolesDto, ReadOneRoleDto, UpdateRoleDto } from "../dto/role.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class RoleController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneRoleDto: ReadOneRoleDto,
+    ): Promise<Role> {
+        return await this.roleService.readOneBy(readOneRoleDto);
     }
 
     @Get(':id')
