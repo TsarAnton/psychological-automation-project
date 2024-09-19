@@ -7,7 +7,6 @@ import { PeriodDto } from "./common/period.dto";
 import { CreateQuestionInMethodDto } from "./question.dto";
 import { CreateIndicatorInMethodDto } from "./indicator.dto";
 
-
 export class CreateMethodDto {
     @IsOptional()
     @IsInt()
@@ -154,6 +153,59 @@ export class ReadFullMethodDto {
     @IsInt()
     @Type(() => Number)
     id: number;
+
+    @IsNotEmpty()
+    @IsArray()
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => Number)
+    languages: number[];
+}
+
+export class ReadAvailableMethodsDto extends BaseReadAllDto {
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => Number)
+    methods?: number[];
+
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    date?: Date;
+
+    @IsOptional()
+	@IsObject()
+	@ValidateNested()
+	@Type(() => PeriodDto)
+	period?: PeriodDto;
+
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => Number)
+    groups?: number[];
+
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => Number)
+    faculties?: number[];
+
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => Number)
+    students?: number[];
 
     @IsNotEmpty()
     @IsArray()
