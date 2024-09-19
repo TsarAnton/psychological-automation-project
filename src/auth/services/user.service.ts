@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { DataSource, In, Not } from "typeorm";
+import { DataSource, In, Like, Not } from "typeorm";
 
 import { User } from "../entities/user.entity";
 import { UserToRole } from "../entities/user-to-role.entity";
 import { RoleService } from "./role.service";
-import { CreateUserDto, UpdateUserDto, VerifyUserDto } from "../dto/user.dto";
+import { CreateUserDto, ReadOneUserDto, UpdateUserDto, VerifyUserDto } from "../dto/user.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { IReadAllUsersOptions } from "../types/user.options";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
@@ -76,7 +76,7 @@ export class UserService extends BaseService {
                 .leftJoin('user.roles', 'role')
                 .addSelect([
                     'role.id',
-                    'role.name',
+                    'role.login',
                 ]);
 
             if(options.filter) {
@@ -239,18 +239,43 @@ export class UserService extends BaseService {
         }, options);
     }
 
-    public async readByLogin(
-        login: string,
+    public async readOneBy(
+        readOneUserDto: ReadOneUserDto,
         options: ITransactionOptions = {},
     ): Promise<User> {
         return this.execInTransaction<User>(async queryRunner => {
-            const existingUser = await queryRunner.manager.findOne(User, {
-                where: { login },
-                relations: ['roles'],
-            });
-            if(existingUser === null) {
-                throw new NotFoundException(`User with login '${login}' does not exist`);
+            let isPropDefined = false;
+            for(let prop in readOneUserDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
             }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
+                .select(['user.id', 'user.login'])
+                .from(User, 'user');
+
+            if(readOneUserDto.id) {
+                queryBuilder.andWhere('user.id = :id', {
+                    id: readOneUserDto.id,
+                });
+            }
+            if(readOneUserDto.login) {
+                queryBuilder.andWhere('user.login LIKE :login', {
+                    login: readOneUserDto.login,
+                });
+            }
+
+            const existingUser = await queryBuilder.getOne();
+
+            if(existingUser === null) {
+                throw new NotFoundException(`Such user does not exist`);
+            }
+            
             return existingUser;
         }, options);
     }

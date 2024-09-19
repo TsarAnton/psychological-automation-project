@@ -31,3 +31,15 @@ export class ReadAllRolesDto extends BaseReadAllDto {
     @Type(() => Number)
     ids?: number[];
 }
+
+export class ReadOneRoleDto {
+    @IsOptional()
+    @MaxLength(100)
+    @IsString()
+    name?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+}

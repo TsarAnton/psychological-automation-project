@@ -81,3 +81,15 @@ export class VerifyUserDto {
     @IsString()
     password: string;
 }
+
+export class ReadOneUserDto {
+    @IsOptional()
+    @MaxLength(100)
+    @IsString()
+    login?: string;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+}
