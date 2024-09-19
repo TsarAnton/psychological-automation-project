@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Question } from "../entities/question.entity";
 import { QuestionService } from "../services/question.service";
-import { CreateQuestionDto, ReadAllQuestionsDto, UpdateQuestionDto } from "../dto/question.dto";
+import { CreateQuestionDto, ReadAllQuestionsDto, ReadOneQuestionDto, UpdateQuestionDto } from "../dto/question.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class QuestionController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneQuestionDto: ReadOneQuestionDto,
+    ): Promise<Question> {
+        return await this.questionService.readOneBy(readOneQuestionDto);
     }
 
     @Get(':id')

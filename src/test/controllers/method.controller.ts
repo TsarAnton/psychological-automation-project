@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Method } from "../entities/method.entity";
 import { MethodService } from "../services/method.service";
-import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadAllMethodsDto, ReadAvailableMethodsDto, ReadFullMethodDto, UpdateMethodDto } from "../dto/method.dto";
+import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadAllMethodsDto, ReadAvailableMethodsDto, ReadFullMethodDto, ReadOneMethodDto, UpdateMethodDto } from "../dto/method.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class MethodController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneMethodDto: ReadOneMethodDto,
+    ): Promise<Method> {
+        return await this.methodService.readOneBy(readOneMethodDto);
     }
 
     @Get('/full')

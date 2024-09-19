@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Answer } from "../entities/answer.entity";
-import { CreateAnswerDto, UpdateAnswerDto } from "../dto/answer.dto";
+import { CreateAnswerDto, ReadOneAnswerDto, UpdateAnswerDto } from "../dto/answer.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllAnswersOptions } from "../types/answer.options";
@@ -120,7 +120,7 @@ export class AnswerService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Answer> {
         return this.execInTransaction<Answer>(async queryRunner => {
-                const existingAnswer = await queryRunner.manager.createQueryBuilder()
+            const existingAnswer = await queryRunner.manager.createQueryBuilder()
                 .select(['answer.id', 'answer.point'])
                 .from(Answer, 'answer')
                 .leftJoin('answer.languages', 'answerLanguages')
@@ -202,6 +202,67 @@ export class AnswerService extends BaseLanguagesService {
             await queryRunner.manager.delete(ResultToAnswer, { answer: { id: id }});
             
             await queryRunner.manager.delete(Answer, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneAnswerDto: ReadOneAnswerDto,
+        options: ITransactionOptions = {},
+    ): Promise<Answer> {
+        return this.execInTransaction<Answer>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneAnswerDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const languages = readOneAnswerDto.languages ? readOneAnswerDto.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['answer.id', 'answer.point'])
+                .from(Answer, 'answer')
+                .leftJoin('answer.languages', 'answerLanguages', 'answerLanguages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoinAndSelect('answerLanguages.language', 'answerLanguage')
+                .leftJoinAndSelect('answer.question', 'question')
+                .leftJoin('question.languages', 'questionLanguages', 'questionLanguages.language.id IN (:...languages)')
+                .leftJoinAndSelect('questionLanguages.language', 'questionLanguage')
+                .addSelect([ 
+                    'answerLanguages.name',
+                    'questionLanguages.name',
+                ]);
+            
+            if(readOneAnswerDto.id) {
+                queryBuilder.andWhere('answer.id = :id', {
+                    id: readOneAnswerDto.id,
+                });
+            }
+            if(readOneAnswerDto.question) {
+                queryBuilder.andWhere('question.id = :question', {
+                    question: readOneAnswerDto.question,
+                });
+            }
+            if(readOneAnswerDto.point) {
+                queryBuilder.andWhere('answer.point = :point', {
+                    point: readOneAnswerDto.point,
+                });
+            }
+
+            const existingAnswer = await queryBuilder.getOne();
+
+            if(existingAnswer === null) {
+                throw new NotFoundException(`Such answer does not exist`);
+            }
+            
+            return existingAnswer;
         }, options);
     }
 }

@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Method } from "../entities/method.entity";
-import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadFullMethodDto, UpdateMethodDto } from "../dto/method.dto";
+import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadFullMethodDto, ReadOneMethodDto, UpdateMethodDto } from "../dto/method.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IAvailableMethodArrays, ICheckIndicatorOptions, IReadAllMethodsOptions, IReadAvailableMethodsOptions } from "../types/method.options";
@@ -203,6 +203,59 @@ export class MethodService extends BaseLanguagesService {
             }
 
             await queryRunner.manager.delete(Method, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneMethodDto: ReadOneMethodDto,
+        options: ITransactionOptions = {},
+    ): Promise<Method> {
+        return this.execInTransaction<Method>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneMethodDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const languages = readOneMethodDto.languages ? readOneMethodDto.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['method.id', 'method.timer'])                
+                .from(Method, 'method')
+                .leftJoin('method.languages', 'languages', 'languages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoinAndSelect('languages.language', 'language')
+                .addSelect([
+                    'languages.name', 
+                    'languages.description',
+                ]);
+
+            if(readOneMethodDto.id) {
+                queryBuilder.andWhere('method.id = :id', {
+                    id: readOneMethodDto.id,
+                });
+            }
+            if(readOneMethodDto.timer) {
+                queryBuilder.andWhere('method.timer <= :timer', {
+                    timer: readOneMethodDto.timer,
+                });
+            }
+
+            const existingMethod = await queryBuilder.getOne();
+
+            if(existingMethod === null) {
+                throw new NotFoundException(`Such method does not exist`);
+            }
+            
+            return existingMethod;
         }, options);
     }
 

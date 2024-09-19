@@ -63,6 +63,26 @@ export class ReadAllMethodsDto extends BaseReadAllDto {
     results?: number[];
 }
 
+export class ReadOneMethodDto {
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    timer?: number;
+
+    @IsOptional()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => LanguageNameDescriptionDto)
+    languages?: LanguageNameDescriptionDto[];
+}
+
 export class BaseAvailMethodDto {
     @IsOptional()
     @IsArray()

@@ -86,6 +86,31 @@ export class ReadAllAnswersDto extends BaseReadAllDto {
     results?: number[];
 }
 
+export class ReadOneAnswerDto {
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    id?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    question?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    point?: number;
+
+    @IsOptional()
+    @IsObject({ each: true })
+    @ValidateNested({ each: true })
+    @ArrayMinSize(1)
+    @IsNotEmpty({ each: true })
+    @Type(() => LanguageNameDto)
+    languages?: LanguageNameDto[];
+}
+
 export class CreateAnswerInMethodDto {
     @IsNotEmpty()
     @IsInt()

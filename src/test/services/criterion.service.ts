@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Criterion } from "../entities/criterion.entity";
-import { CreateCriterionDto, UpdateCriterionDto } from "../dto/criterion.dto";
+import { CreateCriterionDto, ReadOneCriterionDto, UpdateCriterionDto } from "../dto/criterion.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllCriteriaOptions } from "../types/criterion.options";
@@ -251,6 +251,79 @@ export class CriterionService extends BaseLanguagesService {
             await queryRunner.manager.delete(CriterionToLanguage, { criterion: { id: id } });
             
             await queryRunner.manager.delete(Criterion, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneCriterionDto: ReadOneCriterionDto,
+        options: ITransactionOptions = {},
+    ): Promise<Criterion> {
+        return this.execInTransaction<Criterion>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneCriterionDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const languages = readOneCriterionDto.languages ? readOneCriterionDto.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['criterion.id', 'criterion.minValue', 'criterion.maxValue', 'criterion.alarming'])
+                .from(Criterion, 'criterion')
+                .leftJoin('criterion.languages', 'criterionLanguages', 'criterionLanguages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoinAndSelect('criterionLanguages.language', 'criterionLanguage')
+                .leftJoinAndSelect('criterion.indicator', 'indicator')
+                .leftJoin('indicator.languages', 'indicatorLanguages', 'indicatorLanguages.language.id IN (:...languages)')
+                .leftJoinAndSelect('indicatorLanguages.language', 'indicatorLanguage')
+                .addSelect([ 
+                    'criterionLanguages.name',
+                    'criterionLanguages.description',
+                    'indicatorLanguages.name',
+                    'indicatorLanguages.description',
+                ]);
+            
+            if(readOneCriterionDto.alarming) {
+                queryBuilder.andWhere('criterion.alarming = :alarming', {
+                    alarming: readOneCriterionDto.alarming,
+                });
+            }
+            if(readOneCriterionDto.id) {
+                queryBuilder.andWhere('criterion.id = :id', {
+                    id: readOneCriterionDto.id,
+                });
+            }
+            if(readOneCriterionDto.indicator) {
+                queryBuilder.andWhere('indicator.id = :indicator', {
+                    indicator: readOneCriterionDto.indicator,
+                });
+            }
+            if(readOneCriterionDto.maxValue) {
+                queryBuilder.andWhere('criterion.maxValue <= :maxValue', {
+                    maxValue: readOneCriterionDto.maxValue,
+                });
+            }
+            if(readOneCriterionDto.minValue) {
+                queryBuilder.andWhere('criterion.minValue >= :minValue', {
+                    minValue: readOneCriterionDto.minValue,
+                });
+            }
+
+            const existingCriterion = await queryBuilder.getOne();
+
+            if(existingCriterion === null) {
+                throw new NotFoundException(`Such criterion does not exist`);
+            }
+            
+            return existingCriterion;
         }, options);
     }
 }

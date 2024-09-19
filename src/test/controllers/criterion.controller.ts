@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Criterion } from "../entities/criterion.entity";
 import { CriterionService } from "../services/criterion.service";
-import { CreateCriterionDto, ReadAllCriteriaDto, UpdateCriterionDto } from "../dto/criterion.dto";
+import { CreateCriterionDto, ReadAllCriteriaDto, ReadOneCriterionDto, UpdateCriterionDto } from "../dto/criterion.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 
@@ -27,6 +27,14 @@ export class CriterionController extends BaseController {
             sorting,
             filter,
         });
+    }
+
+    @Get('/one')
+    @HttpCode(HttpStatus.OK)
+    public async getOneByAction(
+        @Query() readOneCriterionDto: ReadOneCriterionDto,
+    ): Promise<Criterion> {
+        return await this.criterionService.readOneBy(readOneCriterionDto);
     }
 
     @Get(':id')
