@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Question } from "../entities/question.entity";
-import { CreateQuestionDto, UpdateQuestionDto } from "../dto/question.dto";
+import { CreateQuestionDto, ReadOneQuestionDto, UpdateQuestionDto } from "../dto/question.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllQuestionsOptions } from "../types/question.options";
@@ -231,6 +231,68 @@ export class QuestionService extends BaseLanguagesService {
                 await this.answerService.delete(answer.id, { queryRunner });
             }
             await queryRunner.manager.delete(Question, id);
+        }, options);
+    }
+
+    public async readOneBy(
+        readOneQuestionDto: ReadOneQuestionDto,
+        options: ITransactionOptions = {},
+    ): Promise<Question> {
+        return this.execInTransaction<Question>(async queryRunner => {
+            let isPropDefined = false;
+            for(let prop in readOneQuestionDto) {
+                if(prop) {
+                    isPropDefined = true;
+                    break;
+                }
+            }
+            if(!isPropDefined) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+
+            const languages = readOneQuestionDto.languages ? readOneQuestionDto.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['question.id', 'question.index'])
+                .from(Question, 'question')
+                .leftJoin('question.languages', 'questionLanguages', 'questionLanguages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoinAndSelect('questionLanguages.language', 'questionLanguage')
+                .leftJoinAndSelect('question.method', 'method')
+                .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id IN (:...languages)')
+                .leftJoinAndSelect('methodLanguages.language', 'methodLanguage')
+                .addSelect([ 
+                    'questionLanguages.name',
+                    'methodLanguages.name',
+                    'methodLanguages.description'
+                ]);
+
+            if(readOneQuestionDto.id) {
+                queryBuilder.andWhere('question.id = :id', {
+                    id: readOneQuestionDto.id,
+                });
+            }
+            if(readOneQuestionDto.index) {
+                queryBuilder.andWhere('question.index = :index', {
+                    index: readOneQuestionDto.index,
+                });
+            }
+            if(readOneQuestionDto.method) {
+                queryBuilder.andWhere('method.id = :method', {
+                    method: readOneQuestionDto.method,
+                });
+            }
+
+            const existingQuestion = await queryBuilder.getOne();
+
+            if(existingQuestion === null) {
+                throw new NotFoundException(`Such question does not exist`);
+            }
+            
+            return existingQuestion;
         }, options);
     }
 }
