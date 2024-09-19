@@ -1,3 +1,5 @@
+import { ApiProperty, ApiTags } from "@nestjs/swagger";
+
 export type JwtPayload = {
     id: number;
     login: string;
@@ -9,6 +11,8 @@ type RoleObject = {
     name: string;
 }
 
-export type AccessToken = {
+@ApiTags('Authorization')
+export class AccessToken {
+    @ApiProperty({ description: "Access token string", required: false })
     accessToken: string;
 }

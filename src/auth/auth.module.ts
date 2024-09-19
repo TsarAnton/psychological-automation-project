@@ -12,6 +12,7 @@ import { UserToRole } from "./entities/user-to-role.entity";
 import { UserService } from "./services/user.service";
 import { RoleService } from "./services/role.service";
 import { AuthService } from "./services/auth.service";
+import { JwtService } from "@nestjs/jwt";
 
 import { UserController } from "./controllers/user.controller";
 import { RoleController } from "./controllers/role.controller";
@@ -46,6 +47,7 @@ dotenvConfig({ path: '.env' });
         UserService,
         RoleService,
         AuthService,
+        JwtService,
         LocalStrategy,
         JwtStrategy,
     ],
@@ -53,6 +55,7 @@ dotenvConfig({ path: '.env' });
         UserService,
         RoleService,
         AuthService,
+        JwtService,
     ]
 })
 export class AuthModule {}

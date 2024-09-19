@@ -2,7 +2,9 @@ import { Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn } from "typeorm"
 
 import { User } from "./user.entity";
 import { Role } from "./role.entity";
+import { ApiProperty, ApiTags } from "@nestjs/swagger";
 
+@ApiTags('Role', 'User')
 @Entity({ name: 'users_to_roles', engine: 'InnoDB' })
 export class UserToRole {
     @PrimaryColumn({ name: 'role_id', unique: false, type: 'int' })
