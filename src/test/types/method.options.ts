@@ -16,3 +16,25 @@ export interface ICheckIndicatorOptions extends ITransactionOptions {
     indicators: Indicator[];
     newFormula?: Formula;
 }
+
+export interface IReadAvailableMethodsOptions extends IBaseReadAllOptions {
+    filter?: {
+        methods?: number[];
+        languages?: number[];
+        students?: number[];
+        groups?: number[];
+        faculties?: number[];
+        period?: {
+            minDate?: Date;
+            maxDate?: Date;
+        }
+        date?: Date;
+    }
+}
+
+export interface IAvailableMethodArrays extends ITransactionOptions{
+    methods: number[];
+    students?: number[];
+    groups?: number[];
+    faculties?: number[];
+}

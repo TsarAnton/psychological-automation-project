@@ -2,10 +2,10 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Method } from "../entities/method.entity";
-import { CreateMethodDto, UpdateMethodDto } from "../dto/method.dto";
+import { AvailMethodsDto, CreateMethodDto, DisableMethodsDto, UpdateMethodDto } from "../dto/method.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
-import { ICheckIndicatorOptions, IReadAllMethodsOptions } from "../types/method.options";
+import { IAvailableMethodArrays, ICheckIndicatorOptions, IReadAllMethodsOptions, IReadAvailableMethodsOptions } from "../types/method.options";
 import { LanguageService } from "./language.service";
 import { MethodToLanguage } from "../entities/method-to-language.entity";
 import { QuestionService } from "./question.service";
@@ -246,6 +246,266 @@ export class MethodService extends BaseLanguagesService {
                     currentDate: new Date(Date.now()),
                 })
                 .execute();
+        }, options);
+    }
+
+    public async disableMethod(
+        disableMethodDto: DisableMethodsDto,
+        options: ITransactionOptions = {},
+    ): Promise<void> {
+        return this.execInTransaction<void>(async queryRunner => {
+            const { methods, students, groups, faculties } = disableMethodDto;
+
+            await this.checkAvailableMethodArrays({
+                ...disableMethodDto,
+                queryRunner: queryRunner,
+            });
+
+            const disabledStudentsIds = (groups || students || faculties) ? (await this.studentService.readAll({
+                filter: {
+                    ids: students,
+                    groups: groups,
+                    faculties: faculties,
+                },
+                queryRunner: queryRunner,
+            })).entities.map(el => el.id) : undefined;
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
+                .delete()
+                .from(AvailableMethod, 'availableMethod')
+                .where('method.id IN (:...methods)', {
+                    methods: methods,
+                });
+
+            if(disabledStudentsIds) {
+                queryBuilder.andWhere('student.id IN (:...students)', {
+                    students: disabledStudentsIds,
+                })
+            }
+
+            if(disableMethodDto.date) {
+                queryBuilder.andWhere('dateEnd = :date', {
+                    date: disableMethodDto.date,
+                });
+            }
+            if(disableMethodDto.period) {
+                if(disableMethodDto.period.minDate) {
+                    queryBuilder.andWhere('dateEnd >= :minDate', {
+                        minDate: disableMethodDto.period.minDate,
+                    });
+                }
+                if(disableMethodDto.period.maxDate) {
+                    queryBuilder.andWhere('dateEnd <= :maxDate', {
+                        maxDate: disableMethodDto.period.maxDate,
+                    });
+                }
+            }
+
+            await queryBuilder.execute();
+            
+        }, options);
+    }
+
+    private async checkAvailableMethodArrays(
+        options: IAvailableMethodArrays,
+    ): Promise<void> {
+        return this.execInTransaction<void>(async queryRunner => {
+            const { methods, students, groups, faculties } = options;
+            if(faculties) {
+                if(new Set(faculties).size !== faculties.length) {
+                    throw new BadRequestException(`Faculties array has duplicate language values`);
+                }
+
+                const existingFaculties = (await this.facultyService.readAll({
+                    filter: {
+                        ids: faculties,
+                    },
+                    queryRunner: queryRunner,
+                })).entities;
+
+                if(existingFaculties.length !== faculties.length) {
+                    throw new NotFoundException(`One or several faculties do not exist`);
+                }
+            }
+
+            if(groups) {
+                if(new Set(groups).size !== groups.length) {
+                    throw new BadRequestException(`Groups array has duplicate language values`);
+                }
+
+                const existingGroups = (await this.groupService.readAll({
+                    filter: {
+                        ids: groups,
+                    },
+                    queryRunner: queryRunner,
+                })).entities;
+
+                if(existingGroups.length !== groups.length) {
+                    throw new NotFoundException(`One or several groups do not exist`);
+                }
+            }
+
+            if(students) {
+                if(new Set(students).size !== students.length) {
+                    throw new BadRequestException(`Students array has duplicate language values`);
+                }
+
+                const existingStudents = (await this.studentService.readAll({
+                    filter: {
+                        ids: students,
+                    },
+                    queryRunner: queryRunner,
+                })).entities;
+
+                if(existingStudents.length !== students.length) {
+                    throw new NotFoundException(`One or several students do not exist`);
+                }
+            }
+
+            if(new Set(methods).size !== methods.length) {
+                throw new BadRequestException(`Methods array has duplicate language values`);
+            }
+                
+            const existingMethods = (await this.readAll({
+                filter: {
+                    ids: methods,
+                },
+                queryRunner: queryRunner,
+            })).entities;
+
+            if(existingMethods.length !== methods.length) {
+                throw new NotFoundException(`One or several methods do not exist`);
+            }
+        }, options);
+    }
+
+    async readAvailableMethods(
+        options: IReadAvailableMethodsOptions,
+    ): Promise<ReadAllResult<Method>> {
+        return this.execInTransaction<ReadAllResult<Method>>(async queryRunner => {
+
+            const languages = options.filter?.languages ? options.filter.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['method.id', 'method.timer'])                
+                .from(Method, 'method')
+                .leftJoin('method.languages', 'languages', 'languages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoinAndSelect('languages.language', 'language')
+                .leftJoin('method.availableStudents', 'availableStudents')
+                .leftJoinAndSelect('availableStudents.student', 'student')
+                .leftJoinAndSelect('student.group', 'group')
+                .leftJoinAndSelect('group.faculty', 'faculty')
+                .addSelect([
+                    'languages.name', 
+                    'languages.description',
+                    'availableStudents.dateEnd'
+                ]);
+
+            if(options.filter) {
+                if(options.filter.methods) {
+                    queryBuilder.andWhere('method.id IN (:...methods)', {
+                        methods: options.filter.methods,
+                    });
+                }
+                if(options.filter.students) {
+                    queryBuilder.andWhere('student.id IN (:...students)', {
+                        students: options.filter.students,
+                    });
+                }
+                if(options.filter.groups) {
+                    queryBuilder.andWhere('group.id IN (:...groups)', {
+                        groups: options.filter.groups,
+                    });
+                }
+                if(options.filter.faculties) {
+                    queryBuilder.andWhere('faculty.id IN (:...faculties)', {
+                        faculties: options.filter.faculties,
+                    });
+                }
+                if(options.filter.date) {
+                    queryBuilder.andWhere('availableStudents.dateEnd = :date', {
+                        date: options.filter.date,
+                    });
+                }
+                if(options.filter.period) {
+                    if(options.filter.period.minDate) {
+                        queryBuilder.andWhere('availableStudents.dateEnd >= :minDate', {
+                            dateEnd: options.filter.period.minDate,
+                        });
+                    }
+                    if(options.filter.period.maxDate) {
+                        queryBuilder.andWhere('availableStudents.dateEnd <= :maxDate', {
+                            maxDate: options.filter.period.maxDate,
+                        });
+                    }
+                }
+            }
+
+            if(options.sorting) {
+                queryBuilder.orderBy(options.sorting.column, options.sorting.direction);
+            }
+
+            if(options.pagination) {
+                queryBuilder.skip(options.pagination.page * options.pagination.size).take(options.pagination.size);
+            }
+
+            const [ entities, count ] = await queryBuilder.getManyAndCount();
+
+            return createReadAllResultObject<Method>(options, count, entities);
+            
+        }, options);
+    }
+
+    async availMethods(
+        availMethodsDto: AvailMethodsDto,
+        options: ITransactionOptions = {},
+    ): Promise<ReadAllResult<Method>> {
+        return this.execInTransaction<ReadAllResult<Method>>(async queryRunner => {
+            if(availMethodsDto.dateEnd.getTime() < Date.now()) {
+                throw new BadRequestException(`Date end must be greater than current date`);
+            }
+
+            const { faculties, groups, students, methods } = availMethodsDto;
+
+            if(!faculties && !groups && !students) {
+                throw new BadRequestException(`One or several of faculties, groups, students array must be defined`);
+            }
+
+            await this.checkAvailableMethodArrays({
+                ...availMethodsDto,
+                queryRunner,
+            });
+
+            const addedStudentsIds = (await this.studentService.readAll({
+                filter: {
+                    ids: students,
+                    groups: groups,
+                    faculties: faculties,
+                },
+                queryRunner: queryRunner,
+            })).entities.map(el => el.id);
+
+            let newAvailableMethods = [];
+            for(let student of addedStudentsIds) {
+                for(let method of methods) {
+                    newAvailableMethods.push({
+                        student: { id: student },
+                        method: { id: method },
+                        dateEnd: availMethodsDto.dateEnd,
+                    })
+                }
+            }
+
+            await queryRunner.manager.save(AvailableMethod, newAvailableMethods);
+            return this.readAvailableMethods({
+                filter: { ...availMethodsDto },
+                queryRunner: queryRunner,
+            });
+
         }, options);
     }
 
