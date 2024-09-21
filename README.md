@@ -1,8 +1,10 @@
 # Установка проекта
 1. git clone https://github.com/TsarAnton/psychological-automation-project.git
-2. npm install
-3. создать файл .env
-4. npm run start
+2. npm install (установка зависимостей)
+4. создать файл .env
+# Запуск проекта
+1. npm run start
+2. npm run start:dev (запуск в режиме разработчика) 
 # Миграции
 * npm run migration:run - выполнить миграции
 * npm run migration:generate - сгенерировать миграции
