@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { AnswerToLanguage } from "./entities/answer-to-language.entity";
@@ -34,6 +34,7 @@ import { CriterionController } from "./controllers/criterion.controller";
 import { ResultController } from "./controllers/result.controller";
 
 import { StudentModule } from "src/student/student.module";
+import { AuthModule } from "src/auth/auth.module";
 
 @Module({
     imports: [
@@ -55,6 +56,7 @@ import { StudentModule } from "src/student/student.module";
             Result,
         ]),
         StudentModule,
+        AuthModule,
     ],
     controllers: [
         LanguageController,

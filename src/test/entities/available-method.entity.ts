@@ -2,9 +2,12 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 
 import { Student } from "src/student/entities/student.entity";
 import { Method } from "./method.entity";
+import { ApiProperty, ApiTags } from "@nestjs/swagger";
 
+@ApiTags('Method', 'Student')
 @Entity({ name: 'available_methods', engine: 'InnoDB' })
 export class AvailableMethod {
+    @ApiProperty({ description: "Method related to this entity", required: true, type: () => Method })
     @PrimaryColumn({ name: 'method_id', unique: false, type: 'int' })
     @ManyToOne(
         () => Method,
@@ -14,6 +17,7 @@ export class AvailableMethod {
     @JoinColumn({ name: 'method_id', referencedColumnName: 'id' })
     method: Method;
 
+    @ApiProperty({ description: "Student related to this entity", required: true, type: () => Student })
     @PrimaryColumn({ name: 'student_id', unique: false, type: 'int' })
     @ManyToOne(
         () => Student,
@@ -23,6 +27,7 @@ export class AvailableMethod {
     @JoinColumn({ name: 'student_id', referencedColumnName: 'id' })
     student: Student;
 
+    @ApiProperty({ description: "Date until which this student can perform this method", required: true, type: Date })
     @Column({ nullable: false, type: 'timestamp', name: 'date_end' })
 	dateEnd: Date;
 }
