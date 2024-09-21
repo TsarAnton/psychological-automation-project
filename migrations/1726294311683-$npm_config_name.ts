@@ -25,9 +25,23 @@ import { User } from "src/auth/entities/user.entity";
 export class  $npmConfigName1726294311683 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.manager.save(Language, { name: 'RU' });
+
         const newRoles = [{ name: 'admin' }, { name: 'specialist' }, { name: 'student' }];
         
         await queryRunner.manager.insert(Role, newRoles);
+
+        const adminRoleId = (await queryRunner.manager.findOne(Role, {
+            where: {
+                name: 'admin'
+            }
+        })).id;
+
+        const adminUser = await queryRunner.manager.save(User, { login: "admin", password: await argon2.hash("admin") });
+        await queryRunner.manager.save(UserToRole, {
+            user: { id: adminUser.id },
+            role: { id: adminRoleId },
+        })
 
         const studentRoleId = (await queryRunner.manager.findOne(Role, {
             where: {
