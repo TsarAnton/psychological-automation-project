@@ -47,7 +47,7 @@ export class UpdateUserDto {
     @IsString()
     password?: string;
 
-    @ApiProperty({ description: "Updated user new roles ids", required: false, type: [Number] })
+    @ApiProperty({ description: "Updated user new roles ids (delete all old roles)", required: false, type: [Number] })
     @IsOptional()
     @IsArray()
     @ArrayMinSize(1)

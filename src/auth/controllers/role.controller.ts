@@ -11,7 +11,7 @@ import { HasRoles } from "../decorators/has-role.decorator";
 import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "../guards/roles.guard";
 
-@ApiTags('Role')
+@ApiTags('Role [available for admins]')
 @ApiBearerAuth()
 @HasRoles("admin")
 @UseGuards(RolesGuard)
@@ -45,7 +45,7 @@ export class RoleController extends BaseController {
     @ApiOperation({ summary: "Returns a role with provided filter" })
     @ApiResponse({ status: HttpStatus.OK, description: "Role has succesfully returned", type: Role })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Such role does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "One of properties must be defined" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Get('/one')
@@ -71,7 +71,7 @@ export class RoleController extends BaseController {
 
     @ApiOperation({ summary: "Create a new role" })
     @ApiResponse({ status: HttpStatus.OK, description: "Role has succesfully created", type: Role })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Role with provided name already exists" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Post()
@@ -85,7 +85,7 @@ export class RoleController extends BaseController {
     @ApiOperation({ summary: "Update a role with provided id" })
     @ApiResponse({ status: HttpStatus.OK, description: "Role has succesfully updated", type: Role })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "User with such id does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Role with provided name already exists" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Put(':id')

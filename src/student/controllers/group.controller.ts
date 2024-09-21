@@ -11,7 +11,7 @@ import { HasRoles } from "src/auth/decorators/has-role.decorator";
 import { RolesGuard } from "src/auth/guards/roles.guard";
 import { AuthGuard } from "@nestjs/passport";
 
-@ApiTags('Group')
+@ApiTags('Group [available for admins, specialists]')
 @ApiBearerAuth()
 @HasRoles("admin", "specialist")
 @UseGuards(RolesGuard)
@@ -45,7 +45,7 @@ export class GroupController extends BaseController {
     @ApiOperation({ summary: "Returns a group with provided filter" })
     @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully returned", type: Group })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Such group does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "One of properties must be defined" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Get('/one')
@@ -71,7 +71,7 @@ export class GroupController extends BaseController {
 
     @ApiOperation({ summary: "Create a new group" })
     @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully created", type: Group })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Faculty with provided id does not exist" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Post()
@@ -85,7 +85,7 @@ export class GroupController extends BaseController {
     @ApiOperation({ summary: "Update a group with provided id" })
     @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully updated", type: Group })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Group with such id does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Faculty with provided id does not exist" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Put(':id')
@@ -97,7 +97,7 @@ export class GroupController extends BaseController {
         return this.groupService.update(id, updateGroupDto);
     }
 
-    @ApiOperation({ summary: "Delete a group with provided id" })
+    @ApiOperation({ summary: "Delete a group (and it's students) with provided id" })
     @ApiResponse({ status: HttpStatus.OK, description: "Group has succesfully deleted" })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Group with such id does not exist" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })

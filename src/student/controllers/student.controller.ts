@@ -11,7 +11,7 @@ import { HasRoles } from "src/auth/decorators/has-role.decorator";
 import { RolesGuard } from "src/auth/guards/roles.guard";
 import { AuthGuard } from "@nestjs/passport";
 
-@ApiTags('Student')
+@ApiTags('Student [available for admins, specialists]')
 @ApiBearerAuth()
 @HasRoles("admin", "specialist")
 @UseGuards(RolesGuard)
@@ -45,7 +45,7 @@ export class StudentController extends BaseController {
     @ApiOperation({ summary: "Returns a student with provided filter" })
     @ApiResponse({ status: HttpStatus.OK, description: "Student has succesfully returned", type: Student })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Such student does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "One of properties must be defined" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Get('/one')
@@ -71,7 +71,7 @@ export class StudentController extends BaseController {
 
     @ApiOperation({ summary: "Create a new student" })
     @ApiResponse({ status: HttpStatus.OK, description: "Student has succesfully created", type: Student })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Group with provided id does not exist; Student with provided record book number already exists" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Post()
@@ -85,7 +85,7 @@ export class StudentController extends BaseController {
     @ApiOperation({ summary: "Update a student with provided id" })
     @ApiResponse({ status: HttpStatus.OK, description: "Student has succesfully updated", type: Student })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Student with such id does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Group with provided id does not exist; Student with provided record book number already exists" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Put(':id')

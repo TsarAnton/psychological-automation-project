@@ -11,7 +11,7 @@ import { HasRoles } from "src/auth/decorators/has-role.decorator";
 import { RolesGuard } from "src/auth/guards/roles.guard";
 import { AuthGuard } from "@nestjs/passport";
 
-@ApiTags('Faculty')
+@ApiTags('Faculty [available for admins, specialists]')
 @ApiBearerAuth()
 @HasRoles("admin", "specialist")
 @UseGuards(RolesGuard)
@@ -45,7 +45,7 @@ export class FacultyController extends BaseController {
     @ApiOperation({ summary: "Returns a faculty with provided filter" })
     @ApiResponse({ status: HttpStatus.OK, description: "Faculty has succesfully returned", type: Faculty })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Such faculty does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "One of properties must be defined" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Get('/one')
@@ -71,7 +71,6 @@ export class FacultyController extends BaseController {
 
     @ApiOperation({ summary: "Create a new faculty" })
     @ApiResponse({ status: HttpStatus.OK, description: "Faculty has succesfully created", type: Faculty })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Post()
@@ -85,7 +84,6 @@ export class FacultyController extends BaseController {
     @ApiOperation({ summary: "Update a faculty with provided id" })
     @ApiResponse({ status: HttpStatus.OK, description: "Faculty has succesfully updated", type: Faculty })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Faculty with such id does not exist" })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
     @Put(':id')
@@ -97,7 +95,7 @@ export class FacultyController extends BaseController {
         return this.facultyService.update(id, updateFacultyDto);
     }
 
-    @ApiOperation({ summary: "Delete a faculty with provided id" })
+    @ApiOperation({ summary: "Delete a faculty (and it's groups ans students) with provided id" })
     @ApiResponse({ status: HttpStatus.OK, description: "Faculty has succesfully deleted" })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Faculty with such id does not exist" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })

@@ -6,7 +6,7 @@ import { BaseController } from 'src/common/classes/base-controller';
 import { DataSource } from 'typeorm';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Authorization')
+@ApiTags('Authorization [available for all]')
 @Controller()
 export class AuthController extends BaseController {
     constructor(
