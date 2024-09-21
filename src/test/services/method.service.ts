@@ -244,7 +244,7 @@ export class MethodService extends BaseLanguagesService {
                 });
             }
             if(readOneMethodDto.timer) {
-                queryBuilder.andWhere('method.timer <= :timer', {
+                queryBuilder.andWhere('method.timer = :timer', {
                     timer: readOneMethodDto.timer,
                 });
             }

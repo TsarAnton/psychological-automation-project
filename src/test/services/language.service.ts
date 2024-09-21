@@ -61,27 +61,27 @@ export class LanguageService extends BaseService {
                     });
                 }
                 if(options.filter.methods) {
-                    queryBuilder.andWhere('language.methods.id IN (:...methods)', {
+                    queryBuilder.andWhere('language.methods.mathod.id IN (:...methods)', {
                         methods: options.filter.methods,
                     });
                 }
                 if(options.filter.questions) {
-                    queryBuilder.andWhere('language.questions.id IN (:...questions)', {
+                    queryBuilder.andWhere('language.questions.question.id IN (:...questions)', {
                         questions: options.filter.questions,
                     });
                 }
                 if(options.filter.answers) {
-                    queryBuilder.andWhere('language.answers.id IN (:...answers)', {
+                    queryBuilder.andWhere('language.answers.answer.id IN (:...answers)', {
                         answers: options.filter.answers,
                     });
                 }
                 if(options.filter.indicators) {
-                    queryBuilder.andWhere('language.indicators.id IN (:...indicators)', {
+                    queryBuilder.andWhere('language.indicators.indicator.id IN (:...indicators)', {
                         indicators: options.filter.indicators,
                     });
                 }
                 if(options.filter.criteria) {
-                    queryBuilder.andWhere('language.criteria.id IN (:...criteria)', {
+                    queryBuilder.andWhere('language.criteria.criterion.id IN (:...criteria)', {
                         criteria: options.filter.criteria,
                     });
                 }

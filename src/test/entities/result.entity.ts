@@ -4,18 +4,24 @@ import { Method } from './method.entity';
 import { ResultToIndicator } from './result-to-indicator.entity';
 import { ResultToAnswer } from './result-to-answer.entity';
 import { Answer } from './answer.entity';
+import { ApiProperty, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Result')
 @Entity({ name: 'results', engine: 'InnoDB' })
 export class Result {
+	@ApiProperty({ description: "Result id", required: true })
 	@PrimaryGeneratedColumn()
 	id: number;
 
+	@ApiProperty({ description: "Result date", required: true })
 	@Column({ type: 'timestamp', nullable: false })
 	date: Date;
 
+	@ApiProperty({ description: "If this result is displayed to user", required: true })
     @Column({ type: 'bool', nullable: false })
 	display: number;
 
+	@ApiProperty({ description: "Student related to this result", required: true, type: () => Student })
     @ManyToOne(
 		() => Student,
 		student => student.results,
@@ -24,6 +30,7 @@ export class Result {
 	@JoinColumn({ name: 'student_id', referencedColumnName: 'id' })
 	student: Student;
 
+	@ApiProperty({ description: "Method related to this result", required: true, type: () => Method })
     @ManyToOne(
 		() => Method,
 		method => method.results,
@@ -32,6 +39,7 @@ export class Result {
 	@JoinColumn({ name: 'method_id', referencedColumnName: 'id' })
 	method: Method;
 
+	@ApiProperty({ description: "Array of answers given by student in this result", required: true, type: [() => Answer] })
     @ManyToMany(
         () => Answer,
         answer => answer.results,
@@ -50,6 +58,7 @@ export class Result {
     })
     answers: Answer[];
 
+	@ApiProperty({ description: "Array of indicator scores perfomed by student in this result", required: true, type: [() => ResultToIndicator] })
     @OneToMany(
 		() => ResultToIndicator,
 		resultToIndicator => resultToIndicator.result,
