@@ -731,4 +731,46 @@ export class MethodService extends BaseLanguagesService {
             return existingMethod;
         }, options);
     }
+
+    public async readAllWithIndicators(
+        options: IReadAllMethodsOptions,
+    ): Promise<ReadAllResult<Method>> {
+        return this.execInTransaction<ReadAllResult<Method>>(async queryRunner => {
+
+            const languages = options.filter?.languages ? options.filter.languages : [null];
+
+            const queryBuilder = queryRunner.manager.createQueryBuilder();
+
+            queryBuilder
+                .select(['method.id', 'method.timer'])                
+                .from(Method, 'method')
+                .leftJoinAndSelect('method.indicators', 'indicators')
+                .leftJoin('method.languages', 'languages', 'languages.language.id IN (:...languages)', {
+                    languages: languages,
+                })
+                .leftJoin('indicators.languages', 'indicatorLanguages', 'indicatorLanguages.language.id IN (:...languages)')
+                .addSelect([
+                    'languages.name', 
+                    'indicatorLanguages.name',
+                ]);
+
+            if(options.filter) {
+                if(options.filter.ids) {
+                    queryBuilder.andWhere('method.id IN (:...ids)', {
+                        ids: options.filter.ids,
+                    })
+                }
+                if(options.filter.results) {
+                    queryBuilder.andWhere('method.results.id IN (:...results)', {
+                        results: options.filter.results,
+                    })
+                }
+            }
+
+            const [ entities, count ] = await queryBuilder.getManyAndCount();
+
+            return createReadAllResultObject<Method>(options, count, entities);
+
+        }, options);
+    }
 }

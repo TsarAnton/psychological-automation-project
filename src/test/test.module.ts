@@ -36,6 +36,8 @@ import { ResultController } from "./controllers/result.controller";
 import { StudentModule } from "src/student/student.module";
 import { AuthModule } from "src/auth/auth.module";
 import { JwtService } from "@nestjs/jwt";
+import { XlsxReportService } from "./services/xlsx-report.service";
+import { XlsxReportController } from "./controllers/xlsx-report.controller";
 
 @Module({
     imports: [
@@ -67,6 +69,7 @@ import { JwtService } from "@nestjs/jwt";
         IndicatorController,
         CriterionController,
         ResultController,
+        XlsxReportController,
     ],
     providers: [
         LanguageService,
@@ -77,6 +80,7 @@ import { JwtService } from "@nestjs/jwt";
         CriterionService,
         ResultService,
         JwtService,
+        XlsxReportService,
     ],
     exports: [
         LanguageService,
@@ -86,6 +90,7 @@ import { JwtService } from "@nestjs/jwt";
         IndicatorService,
         CriterionService,
         ResultService,
+        XlsxReportService,
     ]
 })
 export class TestModule {}
