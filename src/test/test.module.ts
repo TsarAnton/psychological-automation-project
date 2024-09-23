@@ -35,6 +35,7 @@ import { ResultController } from "./controllers/result.controller";
 
 import { StudentModule } from "src/student/student.module";
 import { AuthModule } from "src/auth/auth.module";
+import { JwtService } from "@nestjs/jwt";
 
 @Module({
     imports: [
@@ -75,6 +76,7 @@ import { AuthModule } from "src/auth/auth.module";
         IndicatorService,
         CriterionService,
         ResultService,
+        JwtService,
     ],
     exports: [
         LanguageService,

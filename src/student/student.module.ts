@@ -13,6 +13,7 @@ import { FacultyController } from "./controllers/faculty.controller";
 import { GroupController } from "./controllers/group.controller";
 import { StudentController } from "./controllers/student.controller";
 import { AuthModule } from "src/auth/auth.module";
+import { JwtService } from "@nestjs/jwt";
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { AuthModule } from "src/auth/auth.module";
         FacultyService,
         GroupService,
         StudentService,
+        JwtService,
     ],
     exports: [
         FacultyService,

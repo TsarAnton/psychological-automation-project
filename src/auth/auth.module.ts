@@ -47,7 +47,6 @@ dotenvConfig({ path: '.env' });
         UserService,
         RoleService,
         AuthService,
-        JwtService,
         LocalStrategy,
         JwtStrategy,
     ],
@@ -55,7 +54,6 @@ dotenvConfig({ path: '.env' });
         UserService,
         RoleService,
         AuthService,
-        JwtService,
     ]
 })
 export class AuthModule {}

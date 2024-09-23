@@ -257,7 +257,8 @@ export class UserService extends BaseService {
 
             const queryBuilder = queryRunner.manager.createQueryBuilder()
                 .select(['user.id', 'user.login'])
-                .from(User, 'user');
+                .from(User, 'user')
+                .leftJoinAndSelect('user.roles', 'roles');
 
             if(readOneUserDto.id) {
                 queryBuilder.andWhere('user.id = :id', {
