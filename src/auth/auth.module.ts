@@ -22,6 +22,7 @@ import { LocalStrategy } from "./strategies/local.startegy";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { StudentModule } from "src/student/student.module";
 import { StudentService } from "src/student/services/student.service";
+import { UserSubscriber } from "./subscribers/user.subscriber";
 
 dotenvConfig({ path: '.env' });
 
@@ -50,6 +51,7 @@ dotenvConfig({ path: '.env' });
         UserService,
         RoleService,
         AuthService,
+        UserSubscriber,
         LocalStrategy,
         JwtStrategy,
     ],

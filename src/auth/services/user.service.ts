@@ -50,12 +50,7 @@ export class UserService extends BaseService {
             }
 
             const { roles, ...userFields } = createUserDto;
-            let newUser = {
-                ...userFields,
-                roles: roleEntities,
-            }
-            newUser.password = await argon2.hash(newUser.password);
-            const createdUser = await queryRunner.manager.save(User, newUser);
+            const createdUser = await queryRunner.manager.save(User, userFields);
 
             //remove password from user entity
             return this.readById(createdUser.id, { queryRunner });
@@ -76,7 +71,7 @@ export class UserService extends BaseService {
                 .leftJoin('user.roles', 'role')
                 .addSelect([
                     'role.id',
-                    'role.login',
+                    'role.name',
                 ]);
 
             if(options.filter) {
@@ -193,14 +188,8 @@ export class UserService extends BaseService {
             }
 
             const { roles, currentPassword, ...userFields } = updateUserDto;
-            let updatedUser = {
-                ...userFields,
-            }
-            if(updateUserDto.password) {
-                updatedUser.password = await argon2.hash(updatedUser.password);
-            }
 
-            await queryRunner.manager.update(User, id, updatedUser);
+            await queryRunner.manager.update(User, id, userFields);
             return this.readById(id, { queryRunner });
         }, options);
     }
