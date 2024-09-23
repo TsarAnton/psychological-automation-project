@@ -14,6 +14,7 @@ import { validateFormulas } from "../types/common/formula.options";
 import { QuestionService } from "./question.service";
 import { CriterionService } from "./criterion.service";
 import { BaseLanguagesService } from "./common/base-languages.service";
+import { ResultToIndicator } from "../entities/result-to-indicator.entity";
 
 @Injectable()
 export class IndicatorService extends BaseLanguagesService {
@@ -315,6 +316,7 @@ export class IndicatorService extends BaseLanguagesService {
             for(let criterion of existingIndicator.criteria) {
                 await this.criterionService.delete(criterion.id, { queryRunner });
             }
+            await queryRunner.manager.delete(ResultToIndicator, { indicator: { id: existingIndicator.id }});
 
             await queryRunner.manager.delete(Indicator, id);
         }, options);
