@@ -4,7 +4,8 @@
 4. создать файл .env
 # Запуск проекта
 1. npm run start
-2. npm run start:dev (запуск в режиме разработчика) 
+2. npm run start:dev (запуск в режиме разработчика)
+3. swagger: {host}:{port}/api (по умолчанию localhost:3000/api)
 # Миграции
 * npm run migration:run - выполнить миграции
 * npm run migration:generate - сгенерировать миграции
