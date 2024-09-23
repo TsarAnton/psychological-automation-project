@@ -530,6 +530,7 @@ export class MethodService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<ReadAllResult<Method>> {
         return this.execInTransaction<ReadAllResult<Method>>(async queryRunner => {
+
             if(availMethodsDto.dateEnd.getTime() < Date.now()) {
                 throw new BadRequestException(`Date end must be greater than current date`);
             }
@@ -553,6 +554,28 @@ export class MethodService extends BaseLanguagesService {
                 },
                 queryRunner: queryRunner,
             })).entities.map(el => el.id);
+
+            const existingAvailableMethods = await queryRunner.manager.createQueryBuilder()
+                .select(['availableMethod.dateEnd'])
+                .from(AvailableMethod, 'availableMethod')
+                .leftJoinAndSelect('availableMethod.student', 'student')
+                .leftJoinAndSelect('availableMethod.method', 'method')
+                .where('student.id IN (:...students)', {
+                    students: addedStudentsIds,
+                })
+                .andWhere('method.id IN (:...methods)', {
+                    methods: methods,
+                })
+                .andWhere('availableMethod.isOverdue = 0')
+                .getMany();
+
+            if(existingAvailableMethods.length !== 0) {
+                let errorStr = "";
+                for(let entity of existingAvailableMethods) {
+                    errorStr += ` (method: '${entity.method.id}', student: '${entity.student.id}')`;
+                }
+                throw new BadRequestException(`Some students already can perform some methods: ${errorStr}`);
+            }
 
             let newAvailableMethods = [];
             for(let student of addedStudentsIds) {
