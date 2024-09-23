@@ -69,7 +69,7 @@ export class StudentService extends BaseService {
             const queryBuilder = queryRunner.manager.createQueryBuilder();
 
             queryBuilder
-                .select(['student.id', 'student.name', 'student.surname', 'student.patronymic', 'student.phoneNumber'])
+                .select(['student.id', 'student.name', 'student.surname', 'student.patronymic', 'student.phoneNumber', 'student.recordBookNumber'])
                 .from(Student, 'student')
                 .leftJoinAndSelect('student.group', 'group')
                 .leftJoinAndSelect('group.faculty', 'faculty')
@@ -81,8 +81,8 @@ export class StudentService extends BaseService {
 
             if(options.filter) {
                 if(options.filter.recordBookNumber) {
-                    queryBuilder.andWhere('student.recordBookNumber LIKE :recordBookNumber', {
-                        recordBookNumber: '%' + options.filter.recordBookNumber + '%',
+                    queryBuilder.andWhere('student.recordBookNumber = :recordBookNumber', {
+                        recordBookNumber: options.filter.recordBookNumber,
                     })
                 }
                 if(options.filter.name) {
