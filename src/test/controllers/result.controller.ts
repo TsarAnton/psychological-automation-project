@@ -80,7 +80,7 @@ export class ResultController extends BaseController {
         return await this.resultService.readById(id);
     }
 
-    @ApiOperation({ summary: "[Available for students] Create a new result" })
+    @ApiOperation({ summary: "[Available for students] Create a new result, delete entry with provided student and method from available_methods table" })
     @ApiResponse({ status: HttpStatus.OK, description: "Result has succesfully created", type: Result })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Method with provided id does not exist; Method already has result with provided index" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })

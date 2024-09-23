@@ -14,6 +14,7 @@ import { ResultToAnswer } from "../entities/result-to-answer.entity";
 import { IndicatorService } from "./indicator.service";
 import { ResultToIndicator } from "../entities/result-to-indicator.entity";
 import { evaluate } from "mathjs";
+import { AvailableMethod } from "../entities/available-method.entity";
 
 @Injectable()
 export class ResultService extends BaseService {
@@ -47,7 +48,7 @@ export class ResultService extends BaseService {
             }
 
             if(new Set(answers).size !== answers.length) {
-                throw new BadRequestException(`Answers array has duplicate language values`);
+                throw new BadRequestException(`Answers array has duplicate answer id values`);
             }
 
             const existingAnswers = (await this.answerService.readAll({
@@ -92,7 +93,12 @@ export class ResultService extends BaseService {
                 score: evaluate(el.validatedFormula, {
                     answers: answerPoints,
                 }),
-            })))
+            })));
+
+            await queryRunner.manager.delete(AvailableMethod, {
+                method: { id: method },
+                student: { id: student },
+            });
 
             return this.readById(createdResult.id, { queryRunner });
             

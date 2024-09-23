@@ -30,4 +30,12 @@ export class AvailableMethod {
     @ApiProperty({ description: "Date until which this student can perform this method", required: true, type: Date })
     @Column({ nullable: false, type: 'timestamp', name: 'date_end' })
 	dateEnd: Date;
+
+    @ApiProperty({ description: "If result will be displayed to user", required: true })
+    @Column({ nullable: false, type: 'bool', name: 'display_result' })
+	displayResult: boolean;
+
+    @ApiProperty({ description: "If the student is overdue for the performing testing", required: true })
+    @Column({ nullable: false, type: 'bool', name: 'is_overdue' })
+	isOverdue: boolean;
 }

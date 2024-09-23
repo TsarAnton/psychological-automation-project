@@ -2,7 +2,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { DataSource, Not } from "typeorm";
 
 import { Method } from "../entities/method.entity";
-import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadFullMethodDto, ReadOneMethodDto, UpdateMethodDto } from "../dto/method.dto";
+import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadFullMethodDto, ReadOneMethodDto, UpdateAvailableMethodsDto, UpdateMethodDto } from "../dto/method.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IAvailableMethodArrays, ICheckIndicatorOptions, IReadAllMethodsOptions, IReadAvailableMethodsOptions } from "../types/method.options";
@@ -286,15 +286,15 @@ export class MethodService extends BaseLanguagesService {
         }, options);
     }
 
-    //every minute delete available methods which date end has expired
+    //every minute update set isOverdue property to false for available methods which date end has expired
     @Cron('00 * * * * *')
-    private async deleteExpiredAvailableMethod(
+    private async updateExpiredAvailableMethod(
         options: ITransactionOptions = {},
     ): Promise<void> {
         await this.execInTransaction<void>(async queryRunner => {
             await queryRunner.manager.createQueryBuilder()
-                .delete()
-                .from(AvailableMethod, 'availableMethod')
+                .update(AvailableMethod)
+                .set({ isOverdue: true })
                 .where('dateEnd <= :currentDate', {
                     currentDate: new Date(Date.now()),
                 })
@@ -455,7 +455,9 @@ export class MethodService extends BaseLanguagesService {
                 .addSelect([
                     'languages.name', 
                     'languages.description',
-                    'availableStudents.dateEnd'
+                    'availableStudents.dateEnd',
+                    'availableStudents.displayResult',
+                    'availableStudents.isOverdue',
                 ]);
 
             if(options.filter) {
@@ -495,6 +497,16 @@ export class MethodService extends BaseLanguagesService {
                             maxDate: options.filter.period.maxDate,
                         });
                     }
+                }
+                if(options.filter.isOverdue) {
+                    queryBuilder.andWhere('availableStudents.isOverdue = :isOverdue', {
+                        isOverdue: options.filter.isOverdue,
+                    });
+                }
+                if(options.filter.displayResult) {
+                    queryBuilder.andWhere('availableStudents.displayResult = :displayResult', {
+                        displayResult: options.filter.displayResult,
+                    });
                 }
             }
 
@@ -549,6 +561,8 @@ export class MethodService extends BaseLanguagesService {
                         student: { id: student },
                         method: { id: method },
                         dateEnd: availMethodsDto.dateEnd,
+                        displayResult: availMethodsDto.displayResult,
+                        isOverdue: false,
                     })
                 }
             }
@@ -556,6 +570,57 @@ export class MethodService extends BaseLanguagesService {
             await queryRunner.manager.save(AvailableMethod, newAvailableMethods);
             return this.readAvailableMethods({
                 filter: { ...availMethodsDto },
+                queryRunner: queryRunner,
+            });
+
+        }, options);
+    }
+
+    async updateAvailableMethods(
+        updateAvailMethodsDto: UpdateAvailableMethodsDto,
+        options: ITransactionOptions = {},
+    ): Promise<ReadAllResult<Method>> {
+        return this.execInTransaction<ReadAllResult<Method>>(async queryRunner => {
+            if(updateAvailMethodsDto.dateEnd?.getTime() < Date.now()) {
+                throw new BadRequestException(`Date end must be greater than current date`);
+            }
+
+            const { faculties, groups, students, methods } = updateAvailMethodsDto;
+
+            if(!faculties && !groups && !students) {
+                throw new BadRequestException(`One or several of faculties, groups, students array must be defined`);
+            }
+
+            await this.checkAvailableMethodArrays({
+                ...updateAvailMethodsDto,
+                queryRunner,
+            });
+
+            const addedStudentsIds = (await this.studentService.readAll({
+                filter: {
+                    ids: students,
+                    groups: groups,
+                    faculties: faculties,
+                },
+                queryRunner: queryRunner,
+            })).entities.map(el => el.id);
+
+            await queryRunner.manager.createQueryBuilder()
+                .update(AvailableMethod)
+                .set({
+                    dateEnd: updateAvailMethodsDto.dateEnd,
+                    displayResult: updateAvailMethodsDto.displayResult,
+                })
+                .where('student.id IN (:...students)', {
+                    students: addedStudentsIds,
+                })
+                .andWhere('method.id IN (:...methods)', {
+                    methods: methods,
+                })
+                .execute();
+            
+            return this.readAvailableMethods({
+                filter: { ...updateAvailMethodsDto },
                 queryRunner: queryRunner,
             });
 

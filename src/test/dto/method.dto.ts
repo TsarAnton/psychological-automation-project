@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { ArrayMinSize, IsArray, IsBoolean, IsDate, IsDateString, IsInt, IsNotEmpty, IsObject, IsOptional, ValidateNested } from "class-validator";
+import { ArrayMinSize, IsArray, IsBoolean, IsDate, IsDateString, IsInt, IsNotEmpty, IsObject, IsOptional, Max, Min, ValidateNested } from "class-validator";
 
 import { BaseReadAllDto } from "src/common/dto/base-read-all.dto";
 import { LanguageNameDescriptionDto } from "./common/language-data.dto";
@@ -144,6 +144,31 @@ export class AvailMethodsDto extends BaseAvailMethodDto {
     @IsDate()
     @Type(() => Date)
     dateEnd: Date;
+
+    @ApiProperty({ description: "If result will be displayed to user", required: false })
+    @IsNotEmpty()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    displayResult: number;
+}
+
+@ApiTags('Method')
+export class UpdateAvailableMethodsDto extends BaseAvailMethodDto {
+    @ApiProperty({ description: "Date until which provided students can perform provided methods", required: true, type: Date })
+    @IsOptional()
+    @IsDate()
+    @Type(() => Date)
+    dateEnd?: Date;
+
+    @ApiProperty({ description: "If result will be displayed to user", required: false })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    displayResult?: number;
 }
 
 @ApiTags('Method')
@@ -275,4 +300,20 @@ export class ReadAvailableMethodsDto extends BaseReadAllDto {
     @IsNotEmpty({ each: true })
     @Type(() => Number)
     languages: number[];
+
+    @ApiProperty({ description: "Filter: If result will be displayed to user", required: false })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    displayResult?: number;
+
+    @ApiProperty({ description: "Filter: If the student is overdue for the performing testing", required: false })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    isOverdue?: number;
 }

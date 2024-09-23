@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 
 import { Method } from "../entities/method.entity";
 import { MethodService } from "../services/method.service";
-import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadAllMethodsDto, ReadAvailableMethodsDto, ReadFullMethodDto, ReadOneMethodDto, UpdateMethodDto } from "../dto/method.dto";
+import { AvailMethodsDto, CreateFullMethodDto, CreateMethodDto, DisableMethodsDto, ReadAllMethodsDto, ReadAvailableMethodsDto, ReadFullMethodDto, ReadOneMethodDto, UpdateAvailableMethodsDto, UpdateMethodDto } from "../dto/method.dto";
 import { ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseController } from "src/common/classes/base-controller";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -88,7 +88,7 @@ export class MethodController extends BaseController {
     }
 
     @ApiOperation({ summary: "Avail provided methods for provided students" })
-    @ApiResponse({ status: HttpStatus.OK, description: "Methods have succesfully availed for students", type: Method })
+    @ApiResponse({ status: HttpStatus.OK, description: "Methods have succesfully availed for students", type: ReadAllResult })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "One or several of faculties, groups, students array must be defined" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
@@ -99,12 +99,26 @@ export class MethodController extends BaseController {
     public async createAvailableAction(
         @Body() availMethodsDto: AvailMethodsDto,
     ): Promise<ReadAllResult<Method>> {
-        console.log(availMethodsDto)
         return this.methodService.availMethods(availMethodsDto);
     }
 
+    @ApiOperation({ summary: "Update date_end and display_result properties for provided methods for provided students" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Succesfully updated", type: ReadAllResult })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "One or several of faculties, groups, students array must be defined" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })
+    @HasRoles("admin", "specialist")
+    @UseGuards(RolesGuard) 
+    @Put("/available")
+    @HttpCode(HttpStatus.OK)
+    public async updateAvailableAction(
+        @Body() updateAvailableMethodsDto: UpdateAvailableMethodsDto,
+    ): Promise<ReadAllResult<Method>> {
+        return this.methodService.updateAvailableMethods(updateAvailableMethodsDto);
+    }
+
     @ApiOperation({ summary: "Disable provided methods for provided students" })
-    @ApiResponse({ status: HttpStatus.OK, description: "Methods have succesfully disabled for students", type: Method })
+    @ApiResponse({ status: HttpStatus.OK, description: "Methods have succesfully disabled for students" })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Method with such name already exists" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Forbidden" })

@@ -29,6 +29,8 @@ export interface IReadAvailableMethodsOptions extends IBaseReadAllOptions {
             maxDate?: Date;
         }
         date?: Date;
+        isOverdue?: number;
+        displayResult?: number;
     }
 }
 
