@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { Faculty } from "./entities/faculty.entity";
@@ -22,7 +22,7 @@ import { JwtService } from "@nestjs/jwt";
             Group,
             Student,
         ]),
-        AuthModule,
+        forwardRef(() => AuthModule),
     ],
     controllers: [
         FacultyController,

@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { config as dotenvConfig } from 'dotenv';
 
@@ -20,6 +20,8 @@ import { AuthController } from "./controllers/auth.controller";
 
 import { LocalStrategy } from "./strategies/local.startegy";
 import { JwtStrategy } from "./strategies/jwt.strategy";
+import { StudentModule } from "src/student/student.module";
+import { StudentService } from "src/student/services/student.service";
 
 dotenvConfig({ path: '.env' });
 
@@ -36,7 +38,8 @@ dotenvConfig({ path: '.env' });
             User,
             Role,
             UserToRole,
-        ])
+        ]),
+        forwardRef(() => StudentModule),
     ],
     controllers: [
         UserController,
