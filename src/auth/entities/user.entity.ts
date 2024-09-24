@@ -4,6 +4,7 @@ import { Role } from "./role.entity";
 import { UserToRole } from "./user-to-role.entity";
 import { Student } from "src/student/entities/student.entity";
 import { ApiProperty, ApiTags } from "@nestjs/swagger";
+import { StoredRefreshToken } from "./stored-refresh-token.entity";
 
 @ApiTags('User')
 @Entity({ name: 'users', engine: 'InnoDB' })
@@ -26,6 +27,13 @@ export class User {
 		student => student.user,
 	)
 	student: Student;
+
+    @ApiProperty({ description: "Storedrefresh token related to this user", required: false, type: StoredRefreshToken })
+    @OneToOne(
+		() => StoredRefreshToken,
+		storedRefreshToken => storedRefreshToken.user,
+	)
+	storedRefreshToken: StoredRefreshToken;
 
     @ApiProperty({ description: "Array of roles related to this user", required: false, type: [Role] })
     @ManyToMany(
@@ -52,3 +60,5 @@ export class User {
 	)
 	userToRoles: UserToRole[];
 }
+
+export { StoredRefreshToken };

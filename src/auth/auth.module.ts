@@ -23,18 +23,15 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 import { StudentModule } from "src/student/student.module";
 import { StudentService } from "src/student/services/student.service";
 import { UserSubscriber } from "./subscribers/user.subscriber";
+import { RefreshTokenStrategy } from "./strategies/refresh-token.strategy";
+import { StoredRefreshTokenSubscriber } from "./subscribers/stored-refresh-token.subscriber";
 
 dotenvConfig({ path: '.env' });
 
 @Module({
     imports: [
         PassportModule,
-        JwtModule.register({
-            secret: process.env.ACCESS_TOKEN_SECRET,
-            signOptions: { 
-                expiresIn: process.env.ACCESS_TOKEN_EXPIRED,
-            },
-        }),
+        JwtModule.register({}),
         TypeOrmModule.forFeature([
             User,
             Role,
@@ -52,8 +49,10 @@ dotenvConfig({ path: '.env' });
         RoleService,
         AuthService,
         UserSubscriber,
+        StoredRefreshTokenSubscriber,
         LocalStrategy,
         JwtStrategy,
+        RefreshTokenStrategy,
     ],
     exports: [
         UserService,
