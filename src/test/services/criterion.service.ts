@@ -10,6 +10,7 @@ import { IndicatorService } from "./indicator.service";
 import { LanguageService } from "./language.service";
 import { CriterionToLanguage } from "../entities/criterion-to-language.entity";
 import { BaseLanguagesService } from "./common/base-languages.service";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class CriterionService extends BaseLanguagesService {
@@ -174,6 +175,9 @@ export class CriterionService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Criterion> {
         return this.execInTransaction<Criterion>(async queryRunner => {
+            if(!isPropertiesDefined(updateCriterionDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(!(await queryRunner.manager.exists(Criterion, {
                 where: { id },
@@ -227,11 +231,12 @@ export class CriterionService extends BaseLanguagesService {
                 })));
             }
 
-            await queryRunner.manager.update(Criterion, id, {
-                indicator: indicator ? { id: indicator} : undefined,
-                ...properties,
-
-            });
+            if(indicator || isPropertiesDefined(properties)) {
+                await queryRunner.manager.update(Criterion, id, {
+                    indicator: indicator ? { id: indicator} : undefined,
+                    ...properties,
+                });
+            }
 
             return this.readById(id, { queryRunner });
         }, options);
@@ -259,14 +264,7 @@ export class CriterionService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Criterion> {
         return this.execInTransaction<Criterion>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneCriterionDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneCriterionDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

@@ -8,6 +8,7 @@ import { ITransactionOptions } from "src/common/types/transaction.types";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { IReadAllRolesOptions } from "../types/role.options";
 import { BaseService } from "src/common/classes/base-service";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class RoleService extends BaseService {
@@ -93,6 +94,9 @@ export class RoleService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Role> {
         return this.execInTransaction<Role>(async queryRunner => {
+            if(!isPropertiesDefined(updateRoleDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(!(await queryRunner.manager.exists(Role, {
                 where: { id },
@@ -135,14 +139,7 @@ export class RoleService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Role> {
         return this.execInTransaction<Role>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneRoleDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneRoleDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

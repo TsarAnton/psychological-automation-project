@@ -15,6 +15,7 @@ import { IndicatorService } from "./indicator.service";
 import { ResultToIndicator } from "../entities/result-to-indicator.entity";
 import { evaluate } from "mathjs";
 import { AvailableMethod } from "../entities/available-method.entity";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class ResultService extends BaseService {
@@ -280,6 +281,9 @@ export class ResultService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Result> {
         return this.execInTransaction<Result>(async queryRunner => {
+            if(!isPropertiesDefined(updateResultDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(!(await queryRunner.manager.exists(Result, {
                 where: { id },
@@ -316,14 +320,7 @@ export class ResultService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Result> {
         return this.execInTransaction<Result>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneResultDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneResultDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

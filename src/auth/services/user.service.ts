@@ -11,6 +11,7 @@ import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-
 import { BaseService } from "src/common/classes/base-service";
 
 import * as argon2 from 'argon2';
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class UserService extends BaseService {
@@ -51,6 +52,11 @@ export class UserService extends BaseService {
 
             const { roles, ...userFields } = createUserDto;
             const createdUser = await queryRunner.manager.save(User, userFields);
+
+            await queryRunner.manager.insert(UserToRole, roleEntities.map(el => ({
+                role: el,
+                user: createdUser,
+            })));
 
             //remove password from user entity
             return this.readById(createdUser.id, { queryRunner });
@@ -135,6 +141,9 @@ export class UserService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<User> {
         return this.execInTransaction<User>(async queryRunner => {
+            if(!isPropertiesDefined(updateUserDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             const existingUser = await queryRunner.manager.findOneBy(User, { id });
 		    if(!existingUser) {
@@ -189,7 +198,9 @@ export class UserService extends BaseService {
 
             const { roles, currentPassword, ...userFields } = updateUserDto;
 
-            await queryRunner.manager.update(User, id, userFields);
+            if(isPropertiesDefined(userFields)) {
+                await queryRunner.manager.update(User, id, userFields);
+            }
             return this.readById(id, { queryRunner });
         }, options);
     }
@@ -233,14 +244,7 @@ export class UserService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<User> {
         return this.execInTransaction<User>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneUserDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneUserDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

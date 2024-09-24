@@ -11,6 +11,7 @@ import { LanguageService } from "./language.service";
 import { AnswerToLanguage } from "../entities/answer-to-language.entity";
 import { ResultToAnswer } from "../entities/result-to-answer.entity";
 import { BaseLanguagesService } from "./common/base-languages.service";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class AnswerService extends BaseLanguagesService {
@@ -151,6 +152,9 @@ export class AnswerService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Answer> {
         return this.execInTransaction<Answer>(async queryRunner => {
+            if(!isPropertiesDefined(updateAnswerDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(!(await queryRunner.manager.exists(Answer, {
                 where: { id },
@@ -177,11 +181,12 @@ export class AnswerService extends BaseLanguagesService {
                 })));
             }
 
-            await queryRunner.manager.update(Answer, id, {
-                question: question ? { id: question} : undefined,
-                ...properties,
-
-            });
+            if(question || isPropertiesDefined(properties)) {
+                await queryRunner.manager.update(Answer, id, {
+                    question: question ? { id: question } : undefined,
+                    ...properties,
+                });
+            }
 
             return this.readById(id, { queryRunner });
         }, options);

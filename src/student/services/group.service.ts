@@ -7,6 +7,7 @@ import { IReadAllGroupsOptions } from "../types/group.options";
 import { BaseService } from "src/common/classes/base-service";
 import { Group } from "../entities/group.entity";
 import { FacultyService } from "./faculty.service";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class GroupService extends BaseService {
@@ -101,6 +102,9 @@ export class GroupService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Group> {
         return this.execInTransaction<Group>(async queryRunner => {
+            if(!isPropertiesDefined(updateGroupDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(!(await queryRunner.manager.exists(Group, {
                 where: { id },
@@ -144,14 +148,7 @@ export class GroupService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Group> {
         return this.execInTransaction<Group>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneGroupDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneGroupDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

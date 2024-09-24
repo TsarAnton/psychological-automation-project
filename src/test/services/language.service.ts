@@ -12,6 +12,7 @@ import { CriterionToLanguage } from "../entities/criterion-to-language.entity";
 import { IndicatorToLanguage } from "../entities/indicator-to-language.entity";
 import { MethodToLanguage } from "../entities/method-to-language.entity";
 import { QuestionToLanguage } from "../entities/question-to-language.entity";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class LanguageService extends BaseService {
@@ -122,6 +123,9 @@ export class LanguageService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Language> {
         return this.execInTransaction<Language>(async queryRunner => {
+            if(!isPropertiesDefined(updateLanguageDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(!(await queryRunner.manager.exists(Language, {
                 where: { id },
@@ -168,14 +172,7 @@ export class LanguageService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Language> {
         return this.execInTransaction<Language>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneLanguageDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneLanguageDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

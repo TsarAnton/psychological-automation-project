@@ -15,6 +15,7 @@ import { QuestionService } from "./question.service";
 import { CriterionService } from "./criterion.service";
 import { BaseLanguagesService } from "./common/base-languages.service";
 import { ResultToIndicator } from "../entities/result-to-indicator.entity";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class IndicatorService extends BaseLanguagesService {
@@ -201,6 +202,9 @@ export class IndicatorService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Indicator> {
         return this.execInTransaction<Indicator>(async queryRunner => {
+            if(!isPropertiesDefined(updateIndicatorDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             const existingIndicator = await this.readById(id, { queryRunner });
             if(!existingIndicator) {
@@ -284,11 +288,13 @@ export class IndicatorService extends BaseLanguagesService {
                 }
             }
             
-            await queryRunner.manager.update(Indicator, id, {
-                realFormula: formula,
-                validatedFormula: validatedFormula,
-                ...properties,
-            });
+            if(formula || validatedFormula || isPropertiesDefined(properties)) {
+                await queryRunner.manager.update(Indicator, id, {
+                    realFormula: formula,
+                    validatedFormula: validatedFormula,
+                    ...properties,
+                });
+            }
 
             return this.readById(id, { queryRunner });
         }, options);
@@ -327,14 +333,7 @@ export class IndicatorService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Indicator> {
         return this.execInTransaction<Indicator>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneIndicatorDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneIndicatorDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

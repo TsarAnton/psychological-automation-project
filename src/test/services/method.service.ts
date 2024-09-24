@@ -21,6 +21,7 @@ import { AvailableMethod } from "../entities/available-method.entity";
 import { BaseLanguagesService } from "./common/base-languages.service";
 import { Cron } from "@nestjs/schedule";
 import { ResultService } from "./result.service";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class MethodService extends BaseLanguagesService {
@@ -145,6 +146,9 @@ export class MethodService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Method> {
         return this.execInTransaction<Method>(async queryRunner => {
+            if(!isPropertiesDefined(updateMethodDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(!(await queryRunner.manager.exists(Method, {
                 where: { id },
@@ -165,7 +169,9 @@ export class MethodService extends BaseLanguagesService {
                 })))
             }
 
-            await queryRunner.manager.update(Method, id, properties);
+            if(isPropertiesDefined(properties)) {
+                await queryRunner.manager.update(Method, id, properties);
+            }
 
             return this.readById(id, { queryRunner });
         }, options);
@@ -211,14 +217,7 @@ export class MethodService extends BaseLanguagesService {
         options: ITransactionOptions = {},
     ): Promise<Method> {
         return this.execInTransaction<Method>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneMethodDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneMethodDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 
@@ -366,7 +365,7 @@ export class MethodService extends BaseLanguagesService {
             const { methods, students, groups, faculties } = options;
             if(faculties) {
                 if(new Set(faculties).size !== faculties.length) {
-                    throw new BadRequestException(`Faculties array has duplicate language values`);
+                    throw new BadRequestException(`Faculties array has duplicate faculty id values`);
                 }
 
                 const existingFaculties = (await this.facultyService.readAll({
@@ -383,7 +382,7 @@ export class MethodService extends BaseLanguagesService {
 
             if(groups) {
                 if(new Set(groups).size !== groups.length) {
-                    throw new BadRequestException(`Groups array has duplicate language values`);
+                    throw new BadRequestException(`Groups array has duplicate group id values`);
                 }
 
                 const existingGroups = (await this.groupService.readAll({
@@ -400,7 +399,7 @@ export class MethodService extends BaseLanguagesService {
 
             if(students) {
                 if(new Set(students).size !== students.length) {
-                    throw new BadRequestException(`Students array has duplicate language values`);
+                    throw new BadRequestException(`Students array has duplicate student id values`);
                 }
 
                 const existingStudents = (await this.studentService.readAll({
@@ -416,7 +415,7 @@ export class MethodService extends BaseLanguagesService {
             }
 
             if(new Set(methods).size !== methods.length) {
-                throw new BadRequestException(`Methods array has duplicate language values`);
+                throw new BadRequestException(`Methods array has duplicate method id values`);
             }
                 
             const existingMethods = (await this.readAll({
@@ -613,10 +612,9 @@ export class MethodService extends BaseLanguagesService {
                 throw new BadRequestException(`Date end must be greater than current date`);
             }
 
-            const { faculties, groups, students, methods, ...properties } = updateAvailMethodsDto;
-
-            if(!faculties && !groups && !students) {
-                throw new BadRequestException(`One or several of faculties, groups, students array must be defined`);
+            const { students, groups, faculties, methods, ...properties } = updateAvailMethodsDto;
+            if(!isPropertiesDefined(properties)) {
+                throw new BadRequestException(`One of properties must be defined`);
             }
 
             await this.checkAvailableMethodArrays({
@@ -624,25 +622,29 @@ export class MethodService extends BaseLanguagesService {
                 queryRunner,
             });
 
-            const addedStudentsIds = (await this.studentService.readAll({
+            const addedStudentsIds = (faculties || groups || students) ? (await this.studentService.readAll({
                 filter: {
                     ids: students,
                     groups: groups,
                     faculties: faculties,
                 },
                 queryRunner: queryRunner,
-            })).entities.map(el => el.id);
+            })).entities.map(el => el.id) : undefined;
 
-            await queryRunner.manager.createQueryBuilder()
+            const queryBuilder = queryRunner.manager.createQueryBuilder()
                 .update(AvailableMethod)
                 .set(properties)
-                .where('student.id IN (:...students)', {
-                    students: addedStudentsIds,
-                })
-                .andWhere('method.id IN (:...methods)', {
+                .where('method.id IN (:...methods)', {
                     methods: methods,
-                })
-                .execute();
+                });
+            
+            if(addedStudentsIds) {
+                queryBuilder.andWhere('student.id IN (:...students)', {
+                    students: addedStudentsIds,
+                });
+            }
+            
+            await queryBuilder.execute();
             
             return this.readAvailableMethods({
                 filter: { ...updateAvailMethodsDto },

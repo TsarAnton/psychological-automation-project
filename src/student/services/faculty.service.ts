@@ -6,6 +6,7 @@ import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-
 import { IReadAllFacultiesOptions } from "../types/faculty.options";
 import { BaseService } from "src/common/classes/base-service";
 import { Faculty } from "../entities/faculty.entity";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class FacultyService extends BaseService {
@@ -83,7 +84,10 @@ export class FacultyService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Faculty> {
         return this.execInTransaction<Faculty>(async queryRunner => {
-
+            if(!isPropertiesDefined(updateFacultyDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
+            
             if(!(await queryRunner.manager.exists(Faculty, {
                 where: { id },
             }))) {
@@ -114,14 +118,7 @@ export class FacultyService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Faculty> {
         return this.execInTransaction<Faculty>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneFacultyDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneFacultyDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 

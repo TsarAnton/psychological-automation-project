@@ -9,6 +9,7 @@ import { Student } from "../entities/student.entity";
 import { UserService } from "src/auth/services/user.service";
 import { GroupService } from "./group.service";
 import { User } from "src/auth/entities/user.entity";
+import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
 
 @Injectable()
 export class StudentService extends BaseService {
@@ -162,6 +163,9 @@ export class StudentService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Student> {
         return this.execInTransaction<Student>(async queryRunner => {
+            if(!isPropertiesDefined(updateStudentDto)) {
+                throw new BadRequestException(`One of properties must be defined`);
+            }
 
             if(updateStudentDto.recordBookNumber && (await queryRunner.manager.exists(Student, {
                 where: {
@@ -190,9 +194,9 @@ export class StudentService extends BaseService {
             const { group, user, ...properties } = updateStudentDto;
 
             if(group) {
-                const existingStudent = await this.groupService.readById(group, { queryRunner });
-                if(existingStudent === null) {
-                    throw new NotFoundException(`Student with id '${group}' does not exist`);
+                const existingGroup = await this.groupService.readById(group, { queryRunner });
+                if(existingGroup === null) {
+                    throw new NotFoundException(`Group with id '${group}' does not exist`);
                 }
             }
             if(user) {
@@ -230,14 +234,7 @@ export class StudentService extends BaseService {
         options: ITransactionOptions = {},
     ): Promise<Student> {
         return this.execInTransaction<Student>(async queryRunner => {
-            let isPropDefined = false;
-            for(let prop in readOneStudentDto) {
-                if(prop) {
-                    isPropDefined = true;
-                    break;
-                }
-            }
-            if(!isPropDefined) {
+            if(!isPropertiesDefined(readOneStudentDto)) {
                 throw new BadRequestException(`One of properties must be defined`);
             }
 
