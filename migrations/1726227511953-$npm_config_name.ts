@@ -19,8 +19,10 @@ export class  $npmConfigName1726227511953 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE \`available_methods\` (\`method_id\` int NOT NULL, \`student_id\` int NOT NULL, \`date_end\` timestamp NOT NULL, \`display_result\` tinyint NOT NULL, \`is_overdue\` tinyint NOT NULL, \`is_anonymous\` tinyint NOT NULL, PRIMARY KEY (\`method_id\`, \`student_id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`results\` (\`id\` int NOT NULL AUTO_INCREMENT, \`date\` timestamp NOT NULL, \`display\` tinyint NOT NULL, \`student_id\` int NULL, \`method_id\` int NULL, \`is_anonymous\` tinyint NOT NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`results_to_answers\` (\`answer_id\` int NOT NULL, \`result_id\` int NOT NULL, PRIMARY KEY (\`answer_id\`, \`result_id\`)) ENGINE=InnoDB`);
+        await queryRunner.query(`CREATE TABLE \`refresh_tokens\` (\`user_id\` int NOT NULL, \`refreshToken\` varchar(255) NOT NULL, PRIMARY KEY (\`user_id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE INDEX \`IDX_dfa55d1b5d243fcab6efffd3cc\` ON \`results_to_answers\` (\`result_id\`)`);
         await queryRunner.query(`CREATE INDEX \`IDX_dbd6eb05a051ec990b7d6d07a5\` ON \`results_to_answers\` (\`answer_id\`)`);
+        await queryRunner.query(`ALTER TABLE \`refresh_tokens\` ADD CONSTRAINT \`FK_refresh_tokens\` FOREIGN KEY (\`user_id\`) REFERENCES \`users\`(\`id\`) ON DELETE RESTRICT ON UPDATE RESTRICT`);
         await queryRunner.query(`ALTER TABLE \`results_to_indicators\` ADD CONSTRAINT \`FK_0c7a98ea6a87de5220fc53c152d\` FOREIGN KEY (\`indicator_id\`) REFERENCES \`indicators\`(\`id\`) ON DELETE RESTRICT ON UPDATE RESTRICT`);
         await queryRunner.query(`ALTER TABLE \`results_to_indicators\` ADD CONSTRAINT \`FK_4e573e60a9e38f546a3bac832b2\` FOREIGN KEY (\`result_id\`) REFERENCES \`results\`(\`id\`) ON DELETE RESTRICT ON UPDATE RESTRICT`);
         await queryRunner.query(`ALTER TABLE \`criteria_to_languages\` ADD CONSTRAINT \`FK_6775d1b802c5950e6e6f0a874ba\` FOREIGN KEY (\`language_id\`) REFERENCES \`languages\`(\`id\`) ON DELETE RESTRICT ON UPDATE RESTRICT`);
@@ -68,8 +70,10 @@ export class  $npmConfigName1726227511953 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`criteria_to_languages\` DROP FOREIGN KEY \`FK_6775d1b802c5950e6e6f0a874ba\``);
         await queryRunner.query(`ALTER TABLE \`results_to_indicators\` DROP FOREIGN KEY \`FK_4e573e60a9e38f546a3bac832b2\``);
         await queryRunner.query(`ALTER TABLE \`results_to_indicators\` DROP FOREIGN KEY \`FK_0c7a98ea6a87de5220fc53c152d\``);
+        await queryRunner.query(`ALTER TABLE \`refresh_tokens\` DROP FOREIGN KEY \`FK_refresh_tokens\``);
         await queryRunner.query(`DROP INDEX \`IDX_dbd6eb05a051ec990b7d6d07a5\` ON \`results_to_answers\``);
         await queryRunner.query(`DROP INDEX \`IDX_dfa55d1b5d243fcab6efffd3cc\` ON \`results_to_answers\``);
+        await queryRunner.query(`DROP TABLE \`refresh_tokens\``);
         await queryRunner.query(`DROP TABLE \`results_to_answers\``);
         await queryRunner.query(`DROP TABLE \`results\``);
         await queryRunner.query(`DROP TABLE \`available_methods\``);
@@ -86,6 +90,7 @@ export class  $npmConfigName1726227511953 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE \`criteria\``);
         await queryRunner.query(`DROP TABLE \`criteria_to_languages\``);
         await queryRunner.query(`DROP TABLE \`results_to_indicators\``);
+        
     }
 
 }
