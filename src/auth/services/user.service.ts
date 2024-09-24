@@ -1,17 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { DataSource, In, Like, Not } from "typeorm";
 
-import { User } from "../entities/user.entity";
+import { StoredRefreshToken, User } from "../entities/user.entity";
 import { UserToRole } from "../entities/user-to-role.entity";
 import { RoleService } from "./role.service";
 import { CreateUserDto, ReadOneUserDto, UpdateUserDto, VerifyUserDto } from "../dto/user.dto";
 import { ITransactionOptions } from "src/common/types/transaction.types";
-import { IReadAllUsersOptions } from "../types/user.options";
+import { IUpdateStoredRefreshTokenOptions, IReadAllUsersOptions } from "../types/user.options";
 import { createReadAllResultObject, ReadAllResult } from "src/common/types/read-all-result.types";
 import { BaseService } from "src/common/classes/base-service";
 
 import * as argon2 from 'argon2';
 import { isPropertiesDefined } from "src/common/types/check-obj-properties.types";
+import { Cron } from "@nestjs/schedule";
 
 @Injectable()
 export class UserService extends BaseService {
@@ -235,6 +236,7 @@ export class UserService extends BaseService {
 		    if(!existingUser) {
 			    throw new NotFoundException(`User with login '${verifyUserDto.login}' does not exist`);
 		    }  
+            console.log('aboba');
             return await argon2.verify(existingUser.password, verifyUserDto.password);
         }, options);
     }
@@ -271,6 +273,64 @@ export class UserService extends BaseService {
             }
             
             return existingUser;
+        }, options);
+    }
+
+    public async updateStoredRefreshToken(
+        options: IUpdateStoredRefreshTokenOptions,
+    ): Promise<StoredRefreshToken> {
+        return this.execInTransaction<StoredRefreshToken>(async queryRunner => {
+            if(!(await queryRunner.manager.exists(User, {
+                where: {
+                    id: options.user,
+                },
+            }))) {
+                throw new BadRequestException(`User with id '${options.user}' does not exist`);
+            }
+
+            return queryRunner.manager.save(StoredRefreshToken, {
+                user: { id: options.user },
+                refreshToken: options.refreshToken,
+            });
+        }, options);
+    }
+
+    public async deleteStoredRefreshToken(
+        userId: number,
+        options: ITransactionOptions = {},
+    ): Promise<void> {
+        return this.execInTransaction<void>(async queryRunner => {
+            if(!(await queryRunner.manager.exists(User, {
+                where: {
+                    id: userId,
+                },
+            }))) {
+                throw new BadRequestException(`User with id '${userId}' does not exist`);
+            }
+
+            await queryRunner.manager.delete(StoredRefreshToken, {
+                user: { id: userId },
+            })
+        }, options);
+    }
+
+    public async readStoredRefreshTokenByUserId(
+        userId: number,
+        options: ITransactionOptions = {},
+    ): Promise<StoredRefreshToken> {
+        return this.execInTransaction<StoredRefreshToken>(async queryRunner => {
+            const refreshToken = await queryRunner.manager.createQueryBuilder()
+                .select(['storedRefreshToken.refreshToken'])
+                .from(StoredRefreshToken, 'storedRefreshToken')
+                .leftJoinAndSelect('storedRefreshToken.user', 'user')
+                .where('user.id = :id', {
+                    id: userId,
+                })
+                .getOne();
+            if(!refreshToken) {
+                throw new NotFoundException(`User with id '${userId}' does not have stored refresh tokens`);
+            }
+            return refreshToken;
         }, options);
     }
 }
