@@ -6,6 +6,10 @@
 1. npm run start
 2. npm run start:dev (запуск в режиме разработчика)
 3. swagger: {host}:{port}/api (по умолчанию localhost:3000/api)
+   >>
+   `
+   Сортировка и панинация в swagger не работают, потому что они сделаны с помощью классов PaginationDto и SortingDto, которые потом передаются в другие DTO классы. Эти классы передаются в Query, а так как они являются объектами, они передаются следующим образом: http://localhost:3000/users?pagination[page]=1&pagination[size]=3. Но swagger как бы "деструктуризирует" объекты в Query и они передаются следующим образом: http://localhost:3000/users?page=1&size=3, т.е. вставляет их как обычные поля, а не объекты. Так что swagger используется как документация, а для тестирования api используется postman.
+   `
 # Миграции
 * npm run migration:run - выполнить миграции
 * npm run migration:generate - сгенерировать миграции
