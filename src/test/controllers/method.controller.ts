@@ -12,7 +12,7 @@ import { RolesGuard } from "src/auth/guards/roles.guard";
 import { AuthGuard } from "@nestjs/passport";
 
 @ApiTags('Method [available for admins, specialists]')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT authorization')
 @UseGuards(AuthGuard("jwt"))  
 @Controller('methods')
 export class MethodController extends BaseController {

@@ -12,10 +12,10 @@ import { Faculty } from "src/student/entities/faculty.entity";
 import { Response } from 'express';
 
 @ApiTags('Xlsx [available for admins, specialists]')
-// @ApiBearerAuth()
-// @HasRoles("admin", "specialist")
-// @UseGuards(RolesGuard)
-// @UseGuards(AuthGuard("jwt"))
+@ApiBearerAuth('JWT authorization')
+@HasRoles("admin", "specialist")
+@UseGuards(RolesGuard)
+@UseGuards(AuthGuard("jwt"))
 @Controller('xlsx')
 export class XlsxReportController extends BaseController {
     constructor(

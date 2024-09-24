@@ -4,7 +4,7 @@ import { VerifyUserDto } from '../dto/user.dto';
 import { Tokens } from '../types/auth.options';
 import { BaseController } from 'src/common/classes/base-controller';
 import { DataSource } from 'typeorm';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { VerifyStudentByNameDto, VerifyStudentByPhoneNumberDto } from '../dto/auth.dto';
 import { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -20,7 +20,7 @@ export class AuthController extends BaseController {
         super(dataSource);
     }
 
-    @ApiOperation({ summary: "Return jwt access and refresh tokens with provided user login and password" })
+    @ApiOperation({ summary: "Return jwt access and refresh tokens with provided user login and password [use access token to access protected endpoints, use refresh token to refresh access token in /refresh and delete refresh token in /logout endpoints]" })
     @ApiResponse({ status: HttpStatus.OK, description: "User has succesfully authorizated", type: Tokens })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Incorrect login or password" })
     @Post('login/user')
@@ -31,7 +31,7 @@ export class AuthController extends BaseController {
         return this.authService.loginByUserLoginPassword(verifyUserDto);
     }
 
-    @ApiOperation({ summary: "Return jwt access and refresh tokens with provided student name, surname, record book number" })
+    @ApiOperation({ summary: "Return jwt access and refresh tokens with provided student name, surname, record book number [use access token to access protected endpoints, use refresh token to refresh access token in /refresh and delete refresh token in /logout endpoints]" })
     @ApiResponse({ status: HttpStatus.OK, description: "User has succesfully authorizated", type: Tokens })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Incorrect name, surname or record book number" })
     @Post('login/student')
@@ -42,7 +42,7 @@ export class AuthController extends BaseController {
         return this.authService.loginByStudentNameSurnameRecBook(verifyStudentByNameDto);
     }
 
-    @ApiOperation({ summary: "Return jwt access and refresh tokens with provided student phone number" })
+    @ApiOperation({ summary: "Return jwt access and refresh tokens with provided student phone number [use access token to access protected endpoints, use refresh token to refresh access token in /refresh and delete refresh token in /logout endpoints]" })
     @ApiResponse({ status: HttpStatus.OK, description: "User has succesfully authorizated", type: Tokens })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Incorrect phone number" })
     @Post('login/student/phone')
@@ -53,7 +53,8 @@ export class AuthController extends BaseController {
         return this.authService.loginByStudentPhone(verifyStudentByPhoneNumberDto);
     }
 
-    @ApiOperation({ summary: "Delete user stored refresh token" })
+    @ApiBearerAuth('JWT authorization')
+    @ApiOperation({ summary: "Delete user stored refresh token [use refresh token]" })
     @ApiResponse({ status: HttpStatus.OK, description: "User has succesfully logout", type: Tokens })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Access Denied" })
     @UseGuards(AuthGuard('jwt'))
@@ -65,7 +66,8 @@ export class AuthController extends BaseController {
         this.authService.logout(token);
     }
 
-    @ApiOperation({ summary: "Refresh user's jwt acces and refresh tokens" })
+    @ApiBearerAuth('JWT authorization')
+    @ApiOperation({ summary: "Refresh user's jwt acces and refresh tokens [use resfresh token]" })
     @ApiResponse({ status: HttpStatus.OK, description: "Tokens has succesfully refreshed", type: Tokens })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "Access Denied" })
     @UseGuards(AuthGuard('jwt-refresh'))

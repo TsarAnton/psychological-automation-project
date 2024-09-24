@@ -12,7 +12,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "src/auth/guards/roles.guard";
 
 @ApiTags('Language [available for admins, specialists]')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT authorization')
 @HasRoles("admin", "specialist")
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard("jwt"))

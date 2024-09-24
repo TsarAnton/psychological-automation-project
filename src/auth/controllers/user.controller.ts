@@ -12,7 +12,7 @@ import { HasRoles } from "../decorators/has-role.decorator";
 import { RolesGuard } from "../guards/roles.guard";
 
 @ApiTags('User [available for admins]')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT authorization')
 @HasRoles("admin")
 @UseGuards(RolesGuard)
 @UseGuards(AuthGuard("jwt"))

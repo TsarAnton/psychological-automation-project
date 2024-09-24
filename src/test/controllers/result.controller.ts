@@ -12,7 +12,7 @@ import { HasRoles } from "src/auth/decorators/has-role.decorator";
 import { RolesGuard } from "src/auth/guards/roles.guard";
 
 @ApiTags('Result [available for admins, specialists]')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT authorization')
 @UseGuards(AuthGuard("jwt"))  
 @Controller('results')
 export class ResultController extends BaseController {
