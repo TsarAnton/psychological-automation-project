@@ -458,6 +458,7 @@ export class MethodService extends BaseLanguagesService {
                     'availableStudents.dateEnd',
                     'availableStudents.displayResult',
                     'availableStudents.isOverdue',
+                    'availableStudents.isAnonymous',
                 ]);
 
             if(options.filter) {
@@ -508,6 +509,11 @@ export class MethodService extends BaseLanguagesService {
                         displayResult: options.filter.displayResult,
                     });
                 }
+                if(options.filter.isAnonymous) {
+                    queryBuilder.andWhere('availableStudents.isAnonymous = :isAnonymous', {
+                        isAnonymous: options.filter.isAnonymous,
+                    });
+                }
             }
 
             if(options.sorting) {
@@ -535,7 +541,7 @@ export class MethodService extends BaseLanguagesService {
                 throw new BadRequestException(`Date end must be greater than current date`);
             }
 
-            const { faculties, groups, students, methods } = availMethodsDto;
+            const { faculties, groups, students, methods, ...properties } = availMethodsDto;
 
             if(!faculties && !groups && !students) {
                 throw new BadRequestException(`One or several of faculties, groups, students array must be defined`);
@@ -583,9 +589,8 @@ export class MethodService extends BaseLanguagesService {
                     newAvailableMethods.push({
                         student: { id: student },
                         method: { id: method },
-                        dateEnd: availMethodsDto.dateEnd,
-                        displayResult: availMethodsDto.displayResult,
                         isOverdue: false,
+                        ...properties,
                     })
                 }
             }
@@ -608,7 +613,7 @@ export class MethodService extends BaseLanguagesService {
                 throw new BadRequestException(`Date end must be greater than current date`);
             }
 
-            const { faculties, groups, students, methods } = updateAvailMethodsDto;
+            const { faculties, groups, students, methods, ...properties } = updateAvailMethodsDto;
 
             if(!faculties && !groups && !students) {
                 throw new BadRequestException(`One or several of faculties, groups, students array must be defined`);
@@ -630,10 +635,7 @@ export class MethodService extends BaseLanguagesService {
 
             await queryRunner.manager.createQueryBuilder()
                 .update(AvailableMethod)
-                .set({
-                    dateEnd: updateAvailMethodsDto.dateEnd,
-                    displayResult: updateAvailMethodsDto.displayResult,
-                })
+                .set(properties)
                 .where('student.id IN (:...students)', {
                     students: addedStudentsIds,
                 })

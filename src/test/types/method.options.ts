@@ -30,6 +30,7 @@ export interface IReadAvailableMethodsOptions extends IBaseReadAllOptions {
         }
         date?: Date;
         isOverdue?: number;
+        isAnonymous?: number;
         displayResult?: number;
     }
 }

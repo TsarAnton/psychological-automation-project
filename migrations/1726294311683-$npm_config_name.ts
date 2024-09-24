@@ -19,7 +19,6 @@ import { ResultToAnswer } from "src/test/entities/result-to-answer.entity";
 import { ResultToIndicator } from "src/test/entities/result-to-indicator.entity";
 import { Result } from "src/test/entities/result.entity";
 import { MigrationInterface, QueryRunner } from "typeorm";
-import * as argon2 from "argon2";
 import { User } from "src/auth/entities/user.entity";
 
 export class  $npmConfigName1726294311683 implements MigrationInterface {
@@ -37,7 +36,7 @@ export class  $npmConfigName1726294311683 implements MigrationInterface {
             }
         })).id;
 
-        const adminUser = await queryRunner.manager.save(User, { login: "admin", password: await argon2.hash("admin") });
+        const adminUser = await queryRunner.manager.save(User, { login: "admin", password: "admin" });
         await queryRunner.manager.save(UserToRole, {
             user: { id: adminUser.id },
             role: { id: adminRoleId },
@@ -64,7 +63,7 @@ export class  $npmConfigName1726294311683 implements MigrationInterface {
                 for(let k = 0; k < studentCount; k++) {
                     const newUser = await queryRunner.manager.save(User, {
                         login: 'user' + i + j + k,
-                        password: await argon2.hash('user' + i + j + k)
+                        password: 'user' + i + j + k,
                     });
 
                     await queryRunner.manager.save(UserToRole, {

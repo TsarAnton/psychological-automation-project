@@ -58,6 +58,10 @@ export class Result {
     })
     answers: Answer[];
 
+	@ApiProperty({ description: "If result is anonymous", required: true })
+    @Column({ nullable: false, type: 'bool', name: 'is_anonymous' })
+	isAnonymous: boolean;
+
 	@ApiProperty({ description: "Array of indicator scores perfomed by student in this result", required: true, type: [() => ResultToIndicator] })
     @OneToMany(
 		() => ResultToIndicator,

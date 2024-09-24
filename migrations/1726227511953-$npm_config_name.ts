@@ -17,7 +17,7 @@ export class  $npmConfigName1726227511953 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE \`methods_to_languages\` (\`language_id\` int NOT NULL, \`method_id\` int NOT NULL, \`name\` varchar(255) NOT NULL, \`description\` text NULL, PRIMARY KEY (\`language_id\`, \`method_id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`methods\` (\`id\` int NOT NULL AUTO_INCREMENT, \`timer\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`available_methods\` (\`method_id\` int NOT NULL, \`student_id\` int NOT NULL, \`date_end\` timestamp NOT NULL, \`display_result\` tinyint NOT NULL, \`is_overdue\` tinyint NOT NULL, \`is_anonymous\` tinyint NOT NULL, PRIMARY KEY (\`method_id\`, \`student_id\`)) ENGINE=InnoDB`);
-        await queryRunner.query(`CREATE TABLE \`results\` (\`id\` int NOT NULL AUTO_INCREMENT, \`date\` timestamp NOT NULL, \`display\` tinyint NOT NULL, \`student_id\` int NULL, \`method_id\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
+        await queryRunner.query(`CREATE TABLE \`results\` (\`id\` int NOT NULL AUTO_INCREMENT, \`date\` timestamp NOT NULL, \`display\` tinyint NOT NULL, \`student_id\` int NULL, \`method_id\` int NULL, \`is_anonymous\` tinyint NOT NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`results_to_answers\` (\`answer_id\` int NOT NULL, \`result_id\` int NOT NULL, PRIMARY KEY (\`answer_id\`, \`result_id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE INDEX \`IDX_dfa55d1b5d243fcab6efffd3cc\` ON \`results_to_answers\` (\`result_id\`)`);
         await queryRunner.query(`CREATE INDEX \`IDX_dbd6eb05a051ec990b7d6d07a5\` ON \`results_to_answers\` (\`answer_id\`)`);

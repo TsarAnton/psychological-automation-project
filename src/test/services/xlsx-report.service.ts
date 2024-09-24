@@ -50,7 +50,7 @@ export class XlsxReportService extends BaseService {
                 .from(Faculty, 'faculty')
                 .leftJoinAndSelect('faculty.groups', 'groups')
                 .leftJoinAndSelect('groups.students', 'students')
-                .leftJoinAndSelect('students.results', 'results', 'results.date = (' + subQuery.getQuery() + ')')
+                .leftJoinAndSelect('students.results', 'results', 'results.date = (' + subQuery.getQuery() + ') AND results.isAnonymous = 0')
                 .leftJoinAndSelect('results.method', 'method')
                 .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id = :language', {
                     language: options.filter.language,

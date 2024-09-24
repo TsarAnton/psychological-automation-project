@@ -38,6 +38,7 @@ import { AuthModule } from "src/auth/auth.module";
 import { JwtService } from "@nestjs/jwt";
 import { XlsxReportService } from "./services/xlsx-report.service";
 import { XlsxReportController } from "./controllers/xlsx-report.controller";
+import { ResultSubscriber } from "./subscribers/result.subscriber";
 
 @Module({
     imports: [
@@ -81,6 +82,7 @@ import { XlsxReportController } from "./controllers/xlsx-report.controller";
         ResultService,
         JwtService,
         XlsxReportService,
+        ResultSubscriber,
     ],
     exports: [
         LanguageService,

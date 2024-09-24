@@ -145,13 +145,21 @@ export class AvailMethodsDto extends BaseAvailMethodDto {
     @Type(() => Date)
     dateEnd: Date;
 
-    @ApiProperty({ description: "If result will be displayed to user", required: false })
+    @ApiProperty({ description: "If result will be displayed to user", required: true })
     @IsNotEmpty()
     @IsInt()
     @Min(0)
     @Max(1)
     @Type(() => Number)
     displayResult: number;
+
+    @ApiProperty({ description: "If result is anonymous", required: true })
+    @IsNotEmpty()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    isAnonymous: number;
 }
 
 @ApiTags('Method')
@@ -169,6 +177,14 @@ export class UpdateAvailableMethodsDto extends BaseAvailMethodDto {
     @Max(1)
     @Type(() => Number)
     displayResult?: number;
+
+    @ApiProperty({ description: "If result is anonymous", required: false })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    isAnonymous?: number;
 }
 
 @ApiTags('Method')
@@ -316,4 +332,12 @@ export class ReadAvailableMethodsDto extends BaseReadAllDto {
     @Max(1)
     @Type(() => Number)
     isOverdue?: number;
+
+    @ApiProperty({ description: "Filter: If result is anonymous", required: false })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @Max(1)
+    @Type(() => Number)
+    isAnonymous?: number;
 }

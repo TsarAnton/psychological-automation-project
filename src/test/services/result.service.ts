@@ -37,6 +37,19 @@ export class ResultService extends BaseService {
         return this.execInTransaction<Result>(async queryRunner => {
             const { student, answers, method, ...properties } = createResultDto;
 
+            const existingAvailableMethod = await queryRunner.manager.createQueryBuilder()
+                .select(['availableMethod.isAnonymous', 'availableMethod.displayResult'])
+                .from(AvailableMethod, 'availableMethod')
+                .leftJoinAndSelect('availableMethod.method', 'method')
+                .leftJoinAndSelect('availableMethod.student', 'student')
+                .where('method.id = :method', {
+                    method: method,
+                })
+                .andWhere('student.id = :student', {
+                    student: student,
+                })
+                .getOne();
+            
             const existingStudent = await this.studentService.readById(student, { queryRunner });
             if(existingStudent === null) {
                 throw new NotFoundException(`Student with id '${student}' does not exist`);
@@ -70,6 +83,7 @@ export class ResultService extends BaseService {
                 student: { id: student },
                 method: { id: method },
                 date: new Date(Date.now()),
+                isAnonymous: existingAvailableMethod.isAnonymous,
                 ...properties,
             });
 
@@ -115,7 +129,7 @@ export class ResultService extends BaseService {
             const queryBuilder = queryRunner.manager.createQueryBuilder();
 
             queryBuilder
-                .select(['result.id', 'result.date', 'result.display'])
+                .select(['result.id', 'result.date', 'result.display', 'result.isAnonymous'])
                 .from(Result, 'result')
                 .leftJoinAndSelect('result.method', 'method')
                 .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id IN (:...languages)', {
@@ -223,7 +237,7 @@ export class ResultService extends BaseService {
     ): Promise<Result> {
         return this.execInTransaction<Result>(async queryRunner => {
             const existingResult = await queryRunner.manager.createQueryBuilder()
-                .select(['result.id', 'result.date', 'result.display'])
+                .select(['result.id', 'result.date', 'result.display', 'result.isAnonymous'])
                 .from(Result, 'result')
                 .leftJoinAndSelect('result.method', 'method')
                 .leftJoin('method.languages', 'methodLanguages')
@@ -318,7 +332,7 @@ export class ResultService extends BaseService {
             const queryBuilder = queryRunner.manager.createQueryBuilder();
 
             queryBuilder
-                .select(['result.id', 'result.date', 'result.display'])
+                .select(['result.id', 'result.date', 'result.display', 'result.isAnonymous'])
                 .from(Result, 'result')
                 .leftJoinAndSelect('result.method', 'method')
                 .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id IN (:...languages)', {
@@ -382,7 +396,7 @@ export class ResultService extends BaseService {
     ): Promise<Result> {
         return this.execInTransaction<Result>(async queryRunner => {
             const existingResult = await queryRunner.manager.createQueryBuilder()
-                .select(['result.id', 'result.date', 'result.display'])
+                .select(['result.id', 'result.date', 'result.display', 'result.isAnonymous'])
                 .from(Result, 'result')
                 .leftJoinAndSelect('result.method', 'method')
                 .leftJoin('method.languages', 'methodLanguages', 'methodLanguages.language.id IN (:...languages)', {

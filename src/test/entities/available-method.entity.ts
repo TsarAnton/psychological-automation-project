@@ -38,4 +38,8 @@ export class AvailableMethod {
     @ApiProperty({ description: "If the student is overdue for the performing testing", required: true })
     @Column({ nullable: false, type: 'bool', name: 'is_overdue' })
 	isOverdue: boolean;
+
+    @ApiProperty({ description: "If result is anonymous", required: true })
+    @Column({ nullable: false, type: 'bool', name: 'is_anonymous' })
+	isAnonymous: boolean;
 }
